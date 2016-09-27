@@ -61,6 +61,9 @@ enum class SearchMethod{FullSearch, RandomSearch, Annealing, PSO};
 // Machine learning models
 enum class Model { kLinearRegression, kNeuralNetwork };
 
+// Verification techniques
+enum class VerificationMethod { AbsoluteDifference, OneByOneComparison };
+
 // The tuner class and its public API
 class Tuner {
  public:
@@ -126,6 +129,10 @@ class Tuner {
   void PUBLIC_API UseAnnealing(const double fraction, const double max_temperature);
   void PUBLIC_API UsePSO(const double fraction, const size_t swarm_size, const double influence_global,
                          const double influence_local, const double influence_random);
+
+  // Uses chosen method for results comparison. Currently available methods are absolute difference
+  // and one by one comparison.
+  void PUBLIC_API ChooseVerificationMethod(VerificationMethod method);
 
   // Outputs the search process to a file
   void PUBLIC_API OutputSearchLog(const std::string &filename);
