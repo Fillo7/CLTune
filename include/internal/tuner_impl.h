@@ -129,6 +129,10 @@ class TunerImpl {
   template <typename T> bool DownloadAndCompare(MemArgument &device_buffer, const size_t i);
   template <typename T> double AbsoluteDifference(const T reference, const T result);
 
+  // Verification method settings
+  VerificationMethod verificationMethod;
+  double toleranceTreshold;
+
   // Trains and uses a machine learning model based on the search space explored so far
   void ModelPrediction(const Model model_type, const float validation_fraction,
                        const size_t test_top_x_configurations);

@@ -262,7 +262,7 @@ void Tuner::UsePSO(const double fraction, const size_t swarm_size, const double 
 // Choose verification method.
 void Tuner::ChooseVerificationMethod(VerificationMethod method)
 {
-
+    pimpl->verificationMethod = method;
 }
 
 // Output the search process to a file. This is disabled per default.
