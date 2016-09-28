@@ -69,8 +69,8 @@ TunerImpl::TunerImpl():
     context_(Context(device_)),
     queue_(Queue(context_, device_)),
     has_reference_(false),
-    verificationMethod(VerificationMethod::AbsoluteDifference),
-    toleranceTreshold(0.0001),
+    verificationTechnique(VerificationTechnique::AbsoluteDifference),
+    toleranceTreshold(kMaxL2Norm),
     suppress_output_(false),
     output_search_process_(false),
     search_log_filename_(std::string{}),
@@ -93,8 +93,8 @@ TunerImpl::TunerImpl(size_t platform_id, size_t device_id):
     context_(Context(device_)),
     queue_(Queue(context_, device_)),
     has_reference_(false),
-    verificationMethod(VerificationMethod::AbsoluteDifference),
-    toleranceTreshold(0.0001),
+    verificationTechnique(VerificationTechnique::AbsoluteDifference),
+    toleranceTreshold(kMaxL2Norm),
     suppress_output_(false),
     output_search_process_(false),
     search_log_filename_(std::string{}),
@@ -447,26 +447,26 @@ bool TunerImpl::DownloadAndCompare(MemArgument &device_buffer, const size_t i) {
   T* reference_output = static_cast<T*>(reference_outputs_[i]);
 
   // Compares the results (L2 norm)
-  if (verificationMethod == VerificationMethod::AbsoluteDifference)
+  if (verificationTechnique == VerificationTechnique::AbsoluteDifference)
   {
       for (auto j = size_t{ 0 }; j<device_buffer.size; ++j) {
           l2_norm += AbsoluteDifference(reference_output[j], host_buffer[j]);
       }
 
       // Verifies if everything was OK, if not: print the L2 norm
-      if (std::isnan(l2_norm) || l2_norm > kMaxL2Norm) {
+      if (std::isnan(l2_norm) || l2_norm > toleranceTreshold) {
           fprintf(stderr, "%s Results differ: L2 norm is %6.2e\n", kMessageWarning.c_str(), l2_norm);
           return false;
       }
       return true;
   }
-  else if (verificationMethod == VerificationMethod::OneByOneComparison)
+  else if (verificationTechnique == VerificationTechnique::SideBySide)
   {
       for (auto j = size_t{ 0 }; j<device_buffer.size; ++j)
       {
           if (AbsoluteDifference(reference_output[j], host_buffer[j]) > toleranceTreshold)
           {
-              fprintf(stderr, "%s Results differ: difference is %.6lf\n", kMessageWarning.c_str(), AbsoluteDifference(reference_output[j], host_buffer[j]));
+              fprintf(stderr, "%s Results differ: difference is %.8lf\n", kMessageWarning.c_str(), AbsoluteDifference(reference_output[j], host_buffer[j]));
               return false;
           }
       }

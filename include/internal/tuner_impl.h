@@ -130,7 +130,7 @@ class TunerImpl {
   template <typename T> double AbsoluteDifference(const T reference, const T result);
 
   // Verification method settings
-  VerificationMethod verificationMethod;
+  VerificationTechnique verificationTechnique;
   double toleranceTreshold;
 
   // Trains and uses a machine learning model based on the search space explored so far
