@@ -259,13 +259,13 @@ void Tuner::UsePSO(const double fraction, const size_t swarm_size, const double 
   pimpl->search_args_.push_back(influence_random);
 }
 
-// Choose verification method.
-void Tuner::ChooseVerificationTechnique(VerificationTechnique technique)
+// Choose verification technique.
+void Tuner::ChooseVerificationTechnique(const VerificationTechnique technique)
 {
     pimpl->verificationTechnique = technique;
 }
 
-void Tuner::ChooseVerificationTechnique(VerificationTechnique technique, double toleranceTreshold)
+void Tuner::ChooseVerificationTechnique(const VerificationTechnique technique, const double toleranceTreshold)
 {
     pimpl->verificationTechnique = technique;
     pimpl->toleranceTreshold = toleranceTreshold;

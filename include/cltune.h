@@ -130,10 +130,10 @@ class Tuner {
   void PUBLIC_API UsePSO(const double fraction, const size_t swarm_size, const double influence_global,
                          const double influence_local, const double influence_random);
 
-  // Uses chosen method for results comparison. Currently available techniques are absolute difference
+  // Uses chosen technique for results comparison. Currently available techniques are absolute difference
   // and side by side comparison.
-  void PUBLIC_API ChooseVerificationTechnique(VerificationTechnique technique);
-  void PUBLIC_API ChooseVerificationTechnique(VerificationTechnique technique, double toleranceTreshold);
+  void PUBLIC_API ChooseVerificationTechnique(const VerificationTechnique technique);
+  void PUBLIC_API ChooseVerificationTechnique(const VerificationTechnique technique, const double toleranceTreshold);
 
   // Outputs the search process to a file
   void PUBLIC_API OutputSearchLog(const std::string &filename);

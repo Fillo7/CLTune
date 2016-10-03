@@ -128,7 +128,7 @@ class TunerImpl {
   template <typename T> bool DownloadAndCompare(MemArgument &device_buffer, const size_t i);
   template <typename T> double AbsoluteDifference(const T reference, const T result);
 
-  // Verification method settings
+  // Verification technique settings
   VerificationTechnique verificationTechnique;
   double toleranceTreshold;
 
