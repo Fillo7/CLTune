@@ -259,6 +259,17 @@ void Tuner::UsePSO(const double fraction, const size_t swarm_size, const double 
   pimpl->search_args_.push_back(influence_random);
 }
 
+// Choose verification method.
+void Tuner::ChooseVerificationTechnique(VerificationTechnique technique)
+{
+    pimpl->verificationTechnique = technique;
+}
+
+void Tuner::ChooseVerificationTechnique(VerificationTechnique technique, double toleranceTreshold)
+{
+    pimpl->verificationTechnique = technique;
+    pimpl->toleranceTreshold = toleranceTreshold;
+}
 
 // Output the search process to a file. This is disabled per default.
 void Tuner::OutputSearchLog(const std::string &filename) {
