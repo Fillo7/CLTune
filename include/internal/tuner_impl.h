@@ -93,6 +93,7 @@ class TunerImpl {
     size_t size;        // The number of elements (not bytes)
     MemType type;       // The data-type (e.g. float)
     BufferRaw buffer;   // The buffer on the device
+    size_t stride;      // The amount of bytes used in single iteration
   };
 
   // Helper structure to hold the results of a tuning run

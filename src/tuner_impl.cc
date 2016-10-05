@@ -284,12 +284,20 @@ TunerImpl::TunerResult TunerImpl::RunKernel(const std::string &source, const Ker
     }
     arguments_output_copy_.clear();
 
-    // Creates a copy of the output buffer(s)
-    #ifdef VERBOSE
-      fprintf(stdout, "%s Creating a copy of the output buffer\n", kMessageVerbose.c_str());
-    #endif
-    for (auto &output: arguments_output_) {
-      switch (output.type) {
+    // Sets the global and local thread-sizes
+    auto global = kernel.global();
+    auto local = kernel.local();
+
+    // Runs the kernel specified amount of iterations over different input / output sections
+    // *TODO*: FIX INPUT AND OUTPUT BUFFER STRIDES
+    float total_elapsed_time = 0.0f;
+    for (auto iteration = size_t{ 0 }; iteration < kernel.num_iterations(); iteration++) {
+      // Creates a copy of the output buffer(s)
+      #ifdef VERBOSE
+        fprintf(stdout, "%s Creating a copy of the output buffer\n", kMessageVerbose.c_str());
+      #endif
+      for (auto &output : arguments_output_) {
+        switch (output.type) {
         case MemType::kShort: arguments_output_copy_.push_back(CopyOutputBuffer<short>(output)); break;
         case MemType::kInt: arguments_output_copy_.push_back(CopyOutputBuffer<int>(output)); break;
         case MemType::kSizeT: arguments_output_copy_.push_back(CopyOutputBuffer<size_t>(output)); break;
@@ -299,65 +307,64 @@ TunerImpl::TunerResult TunerImpl::RunKernel(const std::string &source, const Ker
         case MemType::kFloat2: arguments_output_copy_.push_back(CopyOutputBuffer<float2>(output)); break;
         case MemType::kDouble2: arguments_output_copy_.push_back(CopyOutputBuffer<double2>(output)); break;
         default: throw std::runtime_error("Unsupported reference output data-type");
+        }
       }
-    }
 
-    // Sets the kernel and its arguments
-    #ifdef VERBOSE
-      fprintf(stdout, "%s Setting kernel arguments\n", kMessageVerbose.c_str());
-    #endif
-    auto tune_kernel = Kernel(program, kernel.name());
-    for (auto &i: arguments_input_) { tune_kernel.SetArgument(i.index, i.buffer); }
-    for (auto &i: arguments_output_copy_) { tune_kernel.SetArgument(i.index, i.buffer); }
-    for (auto &i: arguments_int_) { tune_kernel.SetArgument(i.first, i.second); }
-    for (auto &i: arguments_size_t_) { tune_kernel.SetArgument(i.first, i.second); }
-    for (auto &i: arguments_float_) { tune_kernel.SetArgument(i.first, i.second); }
-    for (auto &i: arguments_double_) { tune_kernel.SetArgument(i.first, i.second); }
-    for (auto &i: arguments_float2_) { tune_kernel.SetArgument(i.first, i.second); }
-    for (auto &i: arguments_double2_) { tune_kernel.SetArgument(i.first, i.second); }
-
-    // Sets the global and local thread-sizes
-    auto global = kernel.global();
-    auto local = kernel.local();
-
-    // Verifies the local memory usage of the kernel
-    auto local_mem_usage = tune_kernel.LocalMemUsage(device_);
-    if (!device_.IsLocalMemoryValid(local_mem_usage)) {
-      throw std::runtime_error("Using too much local memory");
-    }
-
-    // Prepares the kernel
-    queue_.Finish();
-
-    // Runs the kernel (this is the timed part)
-    fprintf(stdout, "%s Running %s\n", kMessageRun.c_str(), kernel.name().c_str());
-    auto events = std::vector<Event>(num_runs_);
-    for (auto t=size_t{0}; t<num_runs_; ++t) {
+      // Sets the kernel and its arguments
       #ifdef VERBOSE
-        fprintf(stdout, "%s Launching kernel (%zu out of %zu for averaging)\n", kMessageVerbose.c_str(),
-                t + 1, num_runs_);
+        fprintf(stdout, "%s Setting kernel arguments\n", kMessageVerbose.c_str());
       #endif
-      tune_kernel.Launch(queue_, global, local, events[t].pointer());
-      queue_.Finish(events[t]);
-    }
-    queue_.Finish();
+      auto tune_kernel = Kernel(program, kernel.name());
+      for (auto &i : arguments_input_) { tune_kernel.SetArgument(i.index, i.buffer); }
+      for (auto &i : arguments_output_copy_) { tune_kernel.SetArgument(i.index, i.buffer); }
+      for (auto &i : arguments_int_) { tune_kernel.SetArgument(i.first, i.second); }
+      for (auto &i : arguments_size_t_) { tune_kernel.SetArgument(i.first, i.second); }
+      for (auto &i : arguments_float_) { tune_kernel.SetArgument(i.first, i.second); }
+      for (auto &i : arguments_double_) { tune_kernel.SetArgument(i.first, i.second); }
+      for (auto &i : arguments_float2_) { tune_kernel.SetArgument(i.first, i.second); }
+      for (auto &i : arguments_double2_) { tune_kernel.SetArgument(i.first, i.second); }
 
-    // Collects the timing information
-    auto elapsed_time = std::numeric_limits<float>::max();
-    for (auto t=size_t{0}; t<num_runs_; ++t) {
-      auto this_elapsed_time = events[t].GetElapsedTime();
-      elapsed_time = std::min(elapsed_time, this_elapsed_time);
+      // Verifies the local memory usage of the kernel
+      auto local_mem_usage = tune_kernel.LocalMemUsage(device_);
+      if (!device_.IsLocalMemoryValid(local_mem_usage)) {
+          throw std::runtime_error("Using too much local memory");
+      }
+
+      // Prepares the kernel
+      queue_.Finish();
+
+      // Runs the kernel (this is the timed part)
+      fprintf(stdout, "%s Running %s\n", kMessageRun.c_str(), kernel.name().c_str());
+      auto events = std::vector<Event>(num_runs_);
+      for (auto t = size_t{ 0 }; t<num_runs_; ++t) {
+        #ifdef VERBOSE
+          fprintf(stdout, "%s Launching kernel (%zu out of %zu for averaging)\n", kMessageVerbose.c_str(),
+                  t + 1, num_runs_);
+        #endif
+        tune_kernel.Launch(queue_, global, local, events[t].pointer());
+        queue_.Finish(events[t]);
+      }
+      queue_.Finish();
+
+      // Collects the timing information
+      auto elapsed_time = std::numeric_limits<float>::max();
+      for (auto t = size_t{ 0 }; t<num_runs_; ++t) {
+        auto this_elapsed_time = events[t].GetElapsedTime();
+        elapsed_time = std::min(elapsed_time, this_elapsed_time);
+      }
+
+      total_elapsed_time += elapsed_time;
     }
 
     // Prints diagnostic information
     fprintf(stdout, "%s Completed %s (%.1lf ms) - %zu out of %zu\n",
-            kMessageOK.c_str(), kernel.name().c_str(), elapsed_time,
+            kMessageOK.c_str(), kernel.name().c_str(), total_elapsed_time,
             configuration_id+1, num_configurations);
 
     // Computes the result of the tuning
-    auto local_threads = size_t{1};
-    for (auto &item: local) { local_threads *= item; }
-    TunerResult result = {kernel.name(), elapsed_time, local_threads, false, {}};
+    auto local_threads = size_t{ 1 };
+    for (auto &item : local) { local_threads *= item; }
+    TunerResult result = {kernel.name(), total_elapsed_time, local_threads, false, {}};
     return result;
   }
 

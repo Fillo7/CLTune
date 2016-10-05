@@ -118,8 +118,11 @@ class Tuner {
 
   // Functions to add kernel-arguments for input buffers, output buffers, and scalars. Make sure to
   // call these in the order in which the arguments appear in the kernel.
-  template <typename T> void AddArgumentInput(const std::vector<T> &source);
-  template <typename T> void AddArgumentOutput(const std::vector<T> &source);
+  // Stride parameter needs to be specified only if argument is used by kernel which produces result
+  // over multiple kernel iterations. Parameter specifies amount of bytes that are used in single
+  // iteration.
+  template <typename T> void AddArgumentInput(const std::vector<T> &source, size_t stride);
+  template <typename T> void AddArgumentOutput(const std::vector<T> &source, size_t stride);
   template <typename T> void AddArgumentScalar(const T argument);
 
   // Configures a specific search method. The default search method is "FullSearch". These are
@@ -136,12 +139,9 @@ class Tuner {
   void PUBLIC_API ChooseVerificationTechnique(const VerificationTechnique technique,
                                               const double tolerance_treshold);
 
-  // Sets number of iterations that kernel has to run in order to produce complete result. Input
-  // and output size arguments specify amount of bytes of argument input / output which will be
-  // used in single kernel iteration. This currently affects ALL arguments which were added by
-  // calling AddArgumentInput() and AddArgumentOutput() methods.
-  void PUBLIC_API SetNumKernelIterations(const size_t id, const size_t num_iterations,
-                                         const size_t it_input_size, const size_t it_output_size);
+  // Sets number of iterations that kernel has to run in order to produce complete result.
+  // This method has to be called only if number of iterations is greater than one.
+  void PUBLIC_API SetNumKernelIterations(const size_t id, const size_t num_iterations);
 
   // Outputs the search process to a file
   void PUBLIC_API OutputSearchLog(const std::string &filename);
