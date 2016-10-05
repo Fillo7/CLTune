@@ -284,21 +284,13 @@ TunerImpl::TunerResult TunerImpl::RunKernel(const std::string &source, const Ker
     }
     arguments_output_copy_.clear();
 
-    // Sets the global and local thread-sizes
-    auto global = kernel.global();
-    auto local = kernel.local();
-
-    // Runs the kernel specified amount of iterations over different input / output sections
-    // *TODO*: FIX INPUT AND OUTPUT BUFFER STRIDES
-    float total_elapsed_time = 0.0f;
-    for (auto iteration = size_t{ 0 }; iteration < kernel.num_iterations(); iteration++) {
-      // Creates a copy of the output buffer(s)
-      #ifdef VERBOSE
-        fprintf(stdout, "%s Creating a copy of the output buffer\n", kMessageVerbose.c_str());
-      #endif
-      for (auto &output : arguments_output_) {
-        switch (output.type) {
-        case MemType::kShort: arguments_output_copy_.push_back(CopyOutputBuffer<short>(output)); break;
+    // Creates a copy of the output buffer(s)
+    #ifdef VERBOSE
+      fprintf(stdout, "%s Creating a copy of the output buffer\n", kMessageVerbose.c_str());
+    #endif
+    for (auto &output : arguments_output_) {
+      switch (output.type) {
+        case MemType::kShort:arguments_output_copy_.push_back(CopyOutputBuffer<short>(output)); break;
         case MemType::kInt: arguments_output_copy_.push_back(CopyOutputBuffer<int>(output)); break;
         case MemType::kSizeT: arguments_output_copy_.push_back(CopyOutputBuffer<size_t>(output)); break;
         case MemType::kHalf: arguments_output_copy_.push_back(CopyOutputBuffer<half>(output)); break;
@@ -307,16 +299,34 @@ TunerImpl::TunerResult TunerImpl::RunKernel(const std::string &source, const Ker
         case MemType::kFloat2: arguments_output_copy_.push_back(CopyOutputBuffer<float2>(output)); break;
         case MemType::kDouble2: arguments_output_copy_.push_back(CopyOutputBuffer<double2>(output)); break;
         default: throw std::runtime_error("Unsupported reference output data-type");
-        }
       }
+    }
 
+    // Sets the global and local thread-sizes
+    auto global = kernel.global();
+    auto local = kernel.local();
+
+    // Runs the kernel specified amount of iterations over different input / output sections
+    float total_elapsed_time = 0.0f;
+    for (auto iteration = size_t{ 0 }; iteration < kernel.num_iterations(); iteration++) {
       // Sets the kernel and its arguments
       #ifdef VERBOSE
         fprintf(stdout, "%s Setting kernel arguments\n", kMessageVerbose.c_str());
       #endif
       auto tune_kernel = Kernel(program, kernel.name());
-      for (auto &i : arguments_input_) { tune_kernel.SetArgument(i.index, i.buffer); }
-      for (auto &i : arguments_output_copy_) { tune_kernel.SetArgument(i.index, i.buffer); }
+      #ifdef USE_OPENCL
+        for (auto &i : arguments_input_) { tune_kernel.SetArgument(i.index, i.buffer); }
+        for (auto &i : arguments_output_copy_) { tune_kernel.SetArgument(i.index, i.buffer); }
+        // WIP: Need to fix clCreateSubBuffer() arguments
+        /*for (auto &i : arguments_input_) { tune_kernel.SetArgument(i.index, clCreateSubBuffer(i.buffer, CL_MEM_READ_ONLY, CL_BUFFER_CREATE_TYPE_REGION, NULL, NULL)); }
+        for (auto &i : arguments_output_copy_) { tune_kernel.SetArgument(i.index, clCreateSubBuffer(i.buffer, CL_MEM_READ_WRITE, CL_BUFFER_CREATE_TYPE_REGION, NULL, NULL)); }*/
+      #else
+        for (auto &i : arguments_input_) { tune_kernel.SetArgument(i.index, i.buffer); }
+        for (auto &i : arguments_output_copy_) { tune_kernel.SetArgument(i.index, i.buffer); }
+        // To do: figure out how to do same thing for CUDA
+        /*for (auto &i : arguments_input_) { tune_kernel.SetArgument(i.index, clCreateSubBuffer(i.buffer, CL_MEM_READ_ONLY, CL_BUFFER_CREATE_TYPE_REGION, NULL, NULL)); }
+        for (auto &i : arguments_output_copy_) { tune_kernel.SetArgument(i.index, clCreateSubBuffer(i.buffer, CL_MEM_READ_WRITE, CL_BUFFER_CREATE_TYPE_REGION, NULL, NULL)); }*/
+      #endif
       for (auto &i : arguments_int_) { tune_kernel.SetArgument(i.first, i.second); }
       for (auto &i : arguments_size_t_) { tune_kernel.SetArgument(i.first, i.second); }
       for (auto &i : arguments_float_) { tune_kernel.SetArgument(i.first, i.second); }
