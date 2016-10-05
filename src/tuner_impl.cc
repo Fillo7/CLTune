@@ -70,8 +70,8 @@ TunerImpl::TunerImpl():
     queue_(Queue(context_, device_)),
     num_runs_(size_t{1}),
     has_reference_(false),
-    verificationTechnique(VerificationTechnique::AbsoluteDifference),
-    toleranceTreshold(kMaxL2Norm),
+    verification_technique_(VerificationTechnique::AbsoluteDifference),
+    tolerance_treshold_(kMaxL2Norm),
     suppress_output_(false),
     output_search_process_(false),
     search_log_filename_(std::string{}),
@@ -95,8 +95,8 @@ TunerImpl::TunerImpl(size_t platform_id, size_t device_id):
     queue_(Queue(context_, device_)),
     num_runs_(size_t{1}),
     has_reference_(false),
-    verificationTechnique(VerificationTechnique::AbsoluteDifference),
-    toleranceTreshold(kMaxL2Norm),
+    verification_technique_(VerificationTechnique::AbsoluteDifference),
+    tolerance_treshold_(kMaxL2Norm),
     suppress_output_(false),
     output_search_process_(false),
     search_log_filename_(std::string{}),
@@ -449,30 +449,28 @@ bool TunerImpl::DownloadAndCompare(MemArgument &device_buffer, const size_t i) {
   T* reference_output = static_cast<T*>(reference_outputs_[i]);
 
   // Compares the results (L2 norm)
-  if (verificationTechnique == VerificationTechnique::AbsoluteDifference)
-  {
-      for (auto j = size_t{ 0 }; j<device_buffer.size; ++j) {
-          l2_norm += AbsoluteDifference(reference_output[j], host_buffer[j]);
-      }
+  if (verification_technique_ == VerificationTechnique::AbsoluteDifference) {
+    for (auto j = size_t{ 0 }; j<device_buffer.size; ++j) {
+      l2_norm += AbsoluteDifference(reference_output[j], host_buffer[j]);
+    }
 
-      // Verifies if everything was OK, if not: print the L2 norm
-      if (std::isnan(l2_norm) || l2_norm > toleranceTreshold) {
-          fprintf(stderr, "%s Results differ: L2 norm is %6.2e\n", kMessageWarning.c_str(), l2_norm);
-          return false;
-      }
-      return true;
+    // Verifies if everything was OK, if not: print the L2 norm
+    if (std::isnan(l2_norm) || l2_norm > tolerance_treshold_) {
+      fprintf(stderr, "%s Results differ: L2 norm is %6.2e\n", kMessageWarning.c_str(), l2_norm);
+      return false;
+    }
+    return true;
   }
-  else if (verificationTechnique == VerificationTechnique::SideBySide)
-  {
-      for (auto j = size_t{ 0 }; j<device_buffer.size; ++j)
-      {
-          if (AbsoluteDifference(reference_output[j], host_buffer[j]) > toleranceTreshold)
-          {
-              fprintf(stderr, "%s Results differ: difference is %.8lf\n", kMessageWarning.c_str(), AbsoluteDifference(reference_output[j], host_buffer[j]));
-              return false;
-          }
+  else if (verification_technique_ == VerificationTechnique::SideBySide) {
+    for (auto j = size_t{ 0 }; j<device_buffer.size; ++j)
+    {
+      if (AbsoluteDifference(reference_output[j], host_buffer[j]) > tolerance_treshold_) {
+        fprintf(stderr, "%s Different results for position %u in output: difference is %.8lf\n",
+                kMessageWarning.c_str(), j, AbsoluteDifference(reference_output[j], host_buffer[j]));
+        return false;
       }
-      return true;
+    }
+    return true;
   }
 }
 

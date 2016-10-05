@@ -260,15 +260,25 @@ void Tuner::UsePSO(const double fraction, const size_t swarm_size, const double 
 }
 
 // Choose verification technique.
-void Tuner::ChooseVerificationTechnique(const VerificationTechnique technique)
-{
-    pimpl->verificationTechnique = technique;
+void Tuner::ChooseVerificationTechnique(const VerificationTechnique technique) {
+  pimpl->verification_technique_ = technique;
 }
 
-void Tuner::ChooseVerificationTechnique(const VerificationTechnique technique, const double toleranceTreshold)
-{
-    pimpl->verificationTechnique = technique;
-    pimpl->toleranceTreshold = toleranceTreshold;
+void Tuner::ChooseVerificationTechnique(const VerificationTechnique technique,
+                                        const double tolerance_treshold) {
+  if (tolerance_treshold < 0.0) { throw std::runtime_error("Invalid tolerance treshold"); }
+  pimpl->verification_technique_ = technique;
+  pimpl->tolerance_treshold_ = tolerance_treshold;
+}
+
+// Sets number of iterations needed to complete computation
+void Tuner::SetNumKernelIterations(const size_t id, const size_t num_iterations,
+                                   const size_t it_input_size, const size_t it_output_size) {
+  if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
+  if (num_iterations < 1) { throw std::runtime_error("Invalid number of iterations"); }
+  if (it_input_size < 1) { throw std::runtime_error("Invalid input size"); }
+  if (it_output_size < 1) { throw std::runtime_error("Invalid output size"); }
+  pimpl->kernels_[id].set_num_iterations(num_iterations);
 }
 
 // Output the search process to a file. This is disabled per default.

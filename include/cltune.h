@@ -130,10 +130,18 @@ class Tuner {
   void PUBLIC_API UsePSO(const double fraction, const size_t swarm_size, const double influence_global,
                          const double influence_local, const double influence_random);
 
-  // Uses chosen technique for results comparison. Currently available techniques are absolute difference
-  // and side by side comparison.
+  // Uses chosen technique for results comparison. Currently available techniques are absolute
+  // difference and side by side comparison.
   void PUBLIC_API ChooseVerificationTechnique(const VerificationTechnique technique);
-  void PUBLIC_API ChooseVerificationTechnique(const VerificationTechnique technique, const double toleranceTreshold);
+  void PUBLIC_API ChooseVerificationTechnique(const VerificationTechnique technique,
+                                              const double tolerance_treshold);
+
+  // Sets number of iterations that kernel has to run in order to produce complete result. Input
+  // and output size arguments specify amount of bytes of argument input / output which will be
+  // used in single kernel iteration. This currently affects ALL arguments which were added by
+  // calling AddArgumentInput() and AddArgumentOutput() methods.
+  void PUBLIC_API SetNumKernelIterations(const size_t id, const size_t num_iterations,
+                                         const size_t it_input_size, const size_t it_output_size);
 
   // Outputs the search process to a file
   void PUBLIC_API OutputSearchLog(const std::string &filename);

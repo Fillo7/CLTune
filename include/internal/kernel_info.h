@@ -106,6 +106,7 @@ class KernelInfo {
   std::string name() const { return name_; }
   std::string source() const { return source_; }
   std::vector<Parameter> parameters() const { return parameters_; }
+  size_t num_iterations() const { return num_iterations_;  }
   IntRange global_base() const { return global_base_; }
   IntRange local_base() const { return local_base_; }
   IntRange global() const { return global_; }
@@ -115,6 +116,7 @@ class KernelInfo {
   // Accessors (setters) - Note that these also pre-set the final global/local size
   void set_global_base(IntRange global) { global_base_ = global; global_ = global; }
   void set_local_base(IntRange local) { local_base_ = local; local_ = local; }
+  void set_num_iterations(size_t num_iterations) { this->num_iterations_ = num_iterations; }
 
   // Prepend to the source-code
   void PrependSource(const std::string &extra_source);
@@ -163,6 +165,7 @@ class KernelInfo {
   std::vector<Configuration> configurations_;
   std::vector<Constraint> constraints_;
   LocalMemory local_memory_;
+  size_t num_iterations_;
 
   Device device_;
 

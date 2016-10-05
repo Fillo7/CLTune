@@ -128,10 +128,6 @@ class TunerImpl {
   template <typename T> bool DownloadAndCompare(MemArgument &device_buffer, const size_t i);
   template <typename T> double AbsoluteDifference(const T reference, const T result);
 
-  // Verification technique settings
-  VerificationTechnique verificationTechnique;
-  double toleranceTreshold;
-
   // Trains and uses a machine learning model based on the search space explored so far
   void ModelPrediction(const Model model_type, const float validation_fraction,
                        const size_t test_top_x_configurations);
@@ -170,6 +166,10 @@ class TunerImpl {
   // The search method and its arguments
   SearchMethod search_method_;
   std::vector<double> search_args_;
+
+  // Verification technique settings
+  VerificationTechnique verification_technique_;
+  double tolerance_treshold_;
 
   // Storage of kernel sources, arguments, and parameters
   size_t argument_counter_;

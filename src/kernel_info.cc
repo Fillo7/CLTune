@@ -45,6 +45,7 @@ KernelInfo::KernelInfo(const std::string name, const std::string source, const D
   device_(device),
   global_base_(), local_base_(),
   global_(), local_(),
+  num_iterations_(1),
   thread_size_modifiers_() {
 }
 
