@@ -140,7 +140,8 @@ class Tuner {
                                               const double tolerance_treshold);
 
   // Sets number of iterations that kernel has to run in order to produce complete result.
-  // This method has to be called only if number of iterations is greater than one.
+  // This method has to be called only for kernels that compute the result over multiple iterations
+  // with different input in each iteration.
   void PUBLIC_API SetNumKernelIterations(const size_t id, const size_t num_iterations);
 
   // Outputs the search process to a file

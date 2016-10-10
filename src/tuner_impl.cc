@@ -315,17 +315,26 @@ TunerImpl::TunerResult TunerImpl::RunKernel(const std::string &source, const Ker
       #endif
       auto tune_kernel = Kernel(program, kernel.name());
       #ifdef USE_OPENCL
-        for (auto &i : arguments_input_) { tune_kernel.SetArgument(i.index, i.buffer); }
-        for (auto &i : arguments_output_copy_) { tune_kernel.SetArgument(i.index, i.buffer); }
-        // WIP: Need to fix clCreateSubBuffer() arguments
-        /*for (auto &i : arguments_input_) { tune_kernel.SetArgument(i.index, clCreateSubBuffer(i.buffer, CL_MEM_READ_ONLY, CL_BUFFER_CREATE_TYPE_REGION, NULL, NULL)); }
-        for (auto &i : arguments_output_copy_) { tune_kernel.SetArgument(i.index, clCreateSubBuffer(i.buffer, CL_MEM_READ_WRITE, CL_BUFFER_CREATE_TYPE_REGION, NULL, NULL)); }*/
+        /*for (auto &i : arguments_input_) { tune_kernel.SetArgument(i.index, i.buffer); }
+        for (auto &i : arguments_output_copy_) { tune_kernel.SetArgument(i.index, i.buffer); }*/
+        for (auto &i : arguments_input_) {
+          cl_buffer_region region;
+          region.origin = i.stride * iteration;
+          region.size = i.stride;
+          tune_kernel.SetArgument(i.index, clCreateSubBuffer(i.buffer, CL_MEM_READ_WRITE, CL_BUFFER_CREATE_TYPE_REGION, &region, NULL));
+        }
+        for (auto &i : arguments_output_copy_) {
+          cl_buffer_region region;
+          region.origin = i.stride * iteration;
+          region.size = i.stride;
+          tune_kernel.SetArgument(i.index, clCreateSubBuffer(i.buffer, CL_MEM_READ_WRITE, CL_BUFFER_CREATE_TYPE_REGION, &region, NULL));
+        }
       #else
         for (auto &i : arguments_input_) { tune_kernel.SetArgument(i.index, i.buffer); }
         for (auto &i : arguments_output_copy_) { tune_kernel.SetArgument(i.index, i.buffer); }
-        // To do: figure out how to do same thing for CUDA
-        /*for (auto &i : arguments_input_) { tune_kernel.SetArgument(i.index, clCreateSubBuffer(i.buffer, CL_MEM_READ_ONLY, CL_BUFFER_CREATE_TYPE_REGION, NULL, NULL)); }
-        for (auto &i : arguments_output_copy_) { tune_kernel.SetArgument(i.index, clCreateSubBuffer(i.buffer, CL_MEM_READ_WRITE, CL_BUFFER_CREATE_TYPE_REGION, NULL, NULL)); }*/
+        // To do: CUDA version was NOT tested yet
+        /*for (auto &i : arguments_input_) { tune_kernel.SetArgument(i.index, i.buffer + stride * iteration); }
+        for (auto &i : arguments_output_copy_) { tune_kernel.SetArgument(i.index, i.buffer + stride * iteration); }*/
       #endif
       for (auto &i : arguments_int_) { tune_kernel.SetArgument(i.first, i.second); }
       for (auto &i : arguments_size_t_) { tune_kernel.SetArgument(i.first, i.second); }
