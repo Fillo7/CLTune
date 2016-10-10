@@ -161,7 +161,7 @@ void Tuner::SetLocalMemoryUsage(const size_t id, LocalMemoryFunction amount,
 // Creates a new buffer of type Memory (containing both host and device data) based on a source
 // vector of data. Then, upload it to the device and store the argument in a list.
 template <typename T>
-void Tuner::AddArgumentInput(const std::vector<T> &source, size_t stride = 0) {
+void Tuner::AddArgumentInput(const std::vector<T> &source, size_t stride) {
   if (stride < 0) { throw std::runtime_error("Invalid stride size"); }
   auto device_buffer = Buffer<T>(pimpl->context(), BufferAccess::kNotOwned, source.size());
   device_buffer.Write(pimpl->queue(), source.size(), source);
@@ -183,7 +183,7 @@ template void PUBLIC_API Tuner::AddArgumentInput<double2>(const std::vector<doub
 // Similar to the above function, but now marked as output buffer. Output buffers are special in the
 // sense that they will be checked in the verification process.
 template <typename T>
-void Tuner::AddArgumentOutput(const std::vector<T> &source, size_t stride = 0) {
+void Tuner::AddArgumentOutput(const std::vector<T> &source, size_t stride) {
   if (stride < 0) { throw std::runtime_error("Invalid stride size"); }
   auto device_buffer = Buffer<T>(pimpl->context(), BufferAccess::kNotOwned, source.size());
   device_buffer.Write(pimpl->queue(), source.size(), source);
