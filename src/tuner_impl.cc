@@ -316,7 +316,7 @@ TunerImpl::TunerResult TunerImpl::RunKernel(const std::string &source, const Ker
       auto tune_kernel = Kernel(program, kernel.name());
       
       #ifdef USE_OPENCL
-        if (kernel.num_iterations() < 2) {
+        if (kernel.num_iterations() == 1) {
           for (auto &i : arguments_input_) { tune_kernel.SetArgument(i.index, i.buffer); }
           for (auto &i : arguments_output_copy_) { tune_kernel.SetArgument(i.index, i.buffer); }
         }
@@ -335,7 +335,7 @@ TunerImpl::TunerResult TunerImpl::RunKernel(const std::string &source, const Ker
           }
         }
       #else
-        if (kernel.num_iterations() < 2) {
+        if (kernel.num_iterations() == 1) {
           for (auto &i : arguments_input_) { tune_kernel.SetArgument(i.index, i.buffer); }
           for (auto &i : arguments_output_copy_) { tune_kernel.SetArgument(i.index, i.buffer); }
         }
@@ -362,7 +362,13 @@ TunerImpl::TunerResult TunerImpl::RunKernel(const std::string &source, const Ker
       queue_.Finish();
 
       // Runs the kernel (this is the timed part)
-      fprintf(stdout, "%s Running %s\n", kMessageRun.c_str(), kernel.name().c_str());
+      if (kernel.num_iterations() == 1) {
+        fprintf(stdout, "%s Running %s\n", kMessageRun.c_str(), kernel.name().c_str());
+      }
+      else {
+        fprintf(stdout, "%s Running %s (Iteration %u / %u)\n", kMessageRun.c_str(),
+                kernel.name().c_str(), iteration + 1, kernel.num_iterations());
+      }
       auto events = std::vector<Event>(num_runs_);
       for (auto t = size_t{ 0 }; t<num_runs_; ++t) {
         #ifdef VERBOSE
