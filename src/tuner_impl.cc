@@ -415,7 +415,7 @@ TunerImpl::MemArgument TunerImpl::CopyOutputBuffer(MemArgument &argument) {
   auto buffer_copy = Buffer<T>(context_, BufferAccess::kNotOwned, argument.size);
   auto buffer_source = Buffer<T>(argument.buffer);
   buffer_source.CopyTo(queue_, argument.size, buffer_copy);
-  auto result = MemArgument{argument.index, argument.size, argument.type, buffer_copy()};
+  auto result = MemArgument{argument.index, argument.size, argument.type, buffer_copy(), argument.stride};
   return result;
 }
 
