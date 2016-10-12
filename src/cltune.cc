@@ -161,7 +161,7 @@ void Tuner::SetLocalMemoryUsage(const size_t id, LocalMemoryFunction amount,
 // Creates a new buffer of type Memory (containing both host and device data) based on a source
 // vector of data. Then, upload it to the device and store the argument in a list.
 template <typename T>
-void Tuner::AddArgumentInput(const std::vector<T> &source, size_t stride) {
+void Tuner::AddArgumentInput(const std::vector<T> &source, const size_t stride) {
   if (stride < 0) { throw std::runtime_error("Invalid stride size"); }
   auto device_buffer = Buffer<T>(pimpl->context(), BufferAccess::kNotOwned, source.size());
   device_buffer.Write(pimpl->queue(), source.size(), source);
@@ -171,19 +171,19 @@ void Tuner::AddArgumentInput(const std::vector<T> &source, size_t stride) {
 }
 
 // Compiles the function for various data-types
-template void PUBLIC_API Tuner::AddArgumentInput<short>(const std::vector<short>&, size_t stride);
-template void PUBLIC_API Tuner::AddArgumentInput<int>(const std::vector<int>&, size_t stride);
-template void PUBLIC_API Tuner::AddArgumentInput<size_t>(const std::vector<size_t>&, size_t stride);
-template void PUBLIC_API Tuner::AddArgumentInput<half>(const std::vector<half>&, size_t stride);
-template void PUBLIC_API Tuner::AddArgumentInput<float>(const std::vector<float>&, size_t stride);
-template void PUBLIC_API Tuner::AddArgumentInput<double>(const std::vector<double>&, size_t stride);
-template void PUBLIC_API Tuner::AddArgumentInput<float2>(const std::vector<float2>&, size_t stride);
-template void PUBLIC_API Tuner::AddArgumentInput<double2>(const std::vector<double2>&, size_t stride);
+template void PUBLIC_API Tuner::AddArgumentInput<short>(const std::vector<short>&, const size_t stride);
+template void PUBLIC_API Tuner::AddArgumentInput<int>(const std::vector<int>&, const size_t stride);
+template void PUBLIC_API Tuner::AddArgumentInput<size_t>(const std::vector<size_t>&, const size_t stride);
+template void PUBLIC_API Tuner::AddArgumentInput<half>(const std::vector<half>&, const size_t stride);
+template void PUBLIC_API Tuner::AddArgumentInput<float>(const std::vector<float>&, const size_t stride);
+template void PUBLIC_API Tuner::AddArgumentInput<double>(const std::vector<double>&, const size_t stride);
+template void PUBLIC_API Tuner::AddArgumentInput<float2>(const std::vector<float2>&, const size_t stride);
+template void PUBLIC_API Tuner::AddArgumentInput<double2>(const std::vector<double2>&, const size_t stride);
 
 // Similar to the above function, but now marked as output buffer. Output buffers are special in the
 // sense that they will be checked in the verification process.
 template <typename T>
-void Tuner::AddArgumentOutput(const std::vector<T> &source, size_t stride) {
+void Tuner::AddArgumentOutput(const std::vector<T> &source, const size_t stride) {
   if (stride < 0) { throw std::runtime_error("Invalid stride size"); }
   auto device_buffer = Buffer<T>(pimpl->context(), BufferAccess::kNotOwned, source.size());
   device_buffer.Write(pimpl->queue(), source.size(), source);
@@ -193,14 +193,14 @@ void Tuner::AddArgumentOutput(const std::vector<T> &source, size_t stride) {
 }
 
 // Compiles the function for various data-types
-template void PUBLIC_API Tuner::AddArgumentOutput<short>(const std::vector<short>&, size_t stride);
-template void PUBLIC_API Tuner::AddArgumentOutput<int>(const std::vector<int>&, size_t stride);
-template void PUBLIC_API Tuner::AddArgumentOutput<size_t>(const std::vector<size_t>&, size_t stride);
-template void PUBLIC_API Tuner::AddArgumentOutput<half>(const std::vector<half>&, size_t stride);
-template void PUBLIC_API Tuner::AddArgumentOutput<float>(const std::vector<float>&, size_t stride);
-template void PUBLIC_API Tuner::AddArgumentOutput<double>(const std::vector<double>&, size_t stride);
-template void PUBLIC_API Tuner::AddArgumentOutput<float2>(const std::vector<float2>&, size_t stride);
-template void PUBLIC_API Tuner::AddArgumentOutput<double2>(const std::vector<double2>&, size_t stride);
+template void PUBLIC_API Tuner::AddArgumentOutput<short>(const std::vector<short>&, const size_t stride);
+template void PUBLIC_API Tuner::AddArgumentOutput<int>(const std::vector<int>&, const size_t stride);
+template void PUBLIC_API Tuner::AddArgumentOutput<size_t>(const std::vector<size_t>&, const size_t stride);
+template void PUBLIC_API Tuner::AddArgumentOutput<half>(const std::vector<half>&, const size_t stride);
+template void PUBLIC_API Tuner::AddArgumentOutput<float>(const std::vector<float>&, const size_t stride);
+template void PUBLIC_API Tuner::AddArgumentOutput<double>(const std::vector<double>&, const size_t stride);
+template void PUBLIC_API Tuner::AddArgumentOutput<float2>(const std::vector<float2>&, const size_t stride);
+template void PUBLIC_API Tuner::AddArgumentOutput<double2>(const std::vector<double2>&, const size_t stride);
 
 // Sets a scalar value as an argument to the kernel. Since a vector of scalars of any type doesn't
 // exist, there is no general implemenation. Instead, each data-type has its specialised version in

@@ -121,8 +121,8 @@ class Tuner {
   // Stride parameter needs to be specified only if argument is used by kernel which produces result
   // over multiple kernel iterations. Parameter specifies amount of bytes that are used in single
   // iteration.
-  template <typename T> void AddArgumentInput(const std::vector<T> &source, size_t stride = 0);
-  template <typename T> void AddArgumentOutput(const std::vector<T> &source, size_t stride = 0);
+  template <typename T> void AddArgumentInput(const std::vector<T> &source, const size_t stride = 0);
+  template <typename T> void AddArgumentOutput(const std::vector<T> &source, const size_t stride = 0);
   template <typename T> void AddArgumentScalar(const T argument);
 
   // Configures a specific search method. The default search method is "FullSearch". These are

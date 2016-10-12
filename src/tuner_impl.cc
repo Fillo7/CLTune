@@ -306,7 +306,7 @@ TunerImpl::TunerResult TunerImpl::RunKernel(const std::string &source, const Ker
     auto global = kernel.global();
     auto local = kernel.local();
 
-    // Runs the kernel specified amount of iterations over different input / output sections
+    // Runs the kernel specified number of iterations over different input / output sections
     float total_elapsed_time = 0.0f;
     for (auto iteration = size_t{ 0 }; iteration < kernel.num_iterations(); iteration++) {
       // Sets the kernel and its arguments
@@ -315,6 +315,9 @@ TunerImpl::TunerResult TunerImpl::RunKernel(const std::string &source, const Ker
       #endif
       auto tune_kernel = Kernel(program, kernel.name());
       
+      // If kernel runs over multiple iterations, buffer is split into smaller sections of equal
+      // size. Different section is used in each iteration. The buffer is split in different way
+      // based on whether OpenCL or CUDA is used.
       #ifdef USE_OPENCL
         if (kernel.num_iterations() == 1) {
           for (auto &i : arguments_input_) { tune_kernel.SetArgument(i.index, i.buffer); }
@@ -325,13 +328,15 @@ TunerImpl::TunerResult TunerImpl::RunKernel(const std::string &source, const Ker
             cl_buffer_region region;
             region.origin = i.stride * iteration;
             region.size = i.stride;
-            tune_kernel.SetArgument(i.index, clCreateSubBuffer(i.buffer, CL_MEM_READ_WRITE, CL_BUFFER_CREATE_TYPE_REGION, &region, NULL));
+            tune_kernel.SetArgument(i.index, clCreateSubBuffer(i.buffer, CL_MEM_READ_WRITE,
+                                              CL_BUFFER_CREATE_TYPE_REGION, &region, NULL));
           }
           for (auto &i : arguments_output_copy_) {
             cl_buffer_region region;
             region.origin = i.stride * iteration;
             region.size = i.stride;
-            tune_kernel.SetArgument(i.index, clCreateSubBuffer(i.buffer, CL_MEM_READ_WRITE, CL_BUFFER_CREATE_TYPE_REGION, &region, NULL));
+            tune_kernel.SetArgument(i.index, clCreateSubBuffer(i.buffer, CL_MEM_READ_WRITE,
+                                              CL_BUFFER_CREATE_TYPE_REGION, &region, NULL));
           }
         }
       #else
@@ -340,9 +345,13 @@ TunerImpl::TunerResult TunerImpl::RunKernel(const std::string &source, const Ker
           for (auto &i : arguments_output_copy_) { tune_kernel.SetArgument(i.index, i.buffer); }
         }
         else {
-          // Warning: CUDA version was NOT tested yet
-          for (auto &i : arguments_input_) { tune_kernel.SetArgument(i.index, i.buffer + stride * iteration); }
-          for (auto &i : arguments_output_copy_) { tune_kernel.SetArgument(i.index, i.buffer + stride * iteration); }
+          // Warning: CUDA version of buffer split was NOT tested yet
+          for (auto &i : arguments_input_) {
+            tune_kernel.SetArgument(i.index, i.buffer + stride * iteration);
+          }
+          for (auto &i : arguments_output_copy_) {
+            tune_kernel.SetArgument(i.index, i.buffer + stride * iteration);
+          }
         }
       #endif
       for (auto &i : arguments_int_) { tune_kernel.SetArgument(i.first, i.second); }
@@ -372,8 +381,8 @@ TunerImpl::TunerResult TunerImpl::RunKernel(const std::string &source, const Ker
       auto events = std::vector<Event>(num_runs_);
       for (auto t = size_t{ 0 }; t<num_runs_; ++t) {
         #ifdef VERBOSE
-          fprintf(stdout, "%s Launching kernel (%zu out of %zu for averaging)\n", kMessageVerbose.c_str(),
-                  t + 1, num_runs_);
+          fprintf(stdout, "%s Launching kernel (%zu out of %zu for averaging)\n",
+                  kMessageVerbose.c_str(), t + 1, num_runs_);
         #endif
         tune_kernel.Launch(queue_, global, local, events[t].pointer());
         queue_.Finish(events[t]);
