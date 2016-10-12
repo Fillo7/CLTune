@@ -70,8 +70,8 @@ TunerImpl::TunerImpl():
     queue_(Queue(context_, device_)),
     num_runs_(size_t{1}),
     has_reference_(false),
-    verificationTechnique(VerificationTechnique::AbsoluteDifference),
-    toleranceTreshold(kMaxL2Norm),
+    verification_technique_(VerificationTechnique::AbsoluteDifference),
+    tolerance_treshold_(kMaxL2Norm),
     suppress_output_(false),
     output_search_process_(false),
     search_log_filename_(std::string{}),
@@ -95,8 +95,8 @@ TunerImpl::TunerImpl(size_t platform_id, size_t device_id):
     queue_(Queue(context_, device_)),
     num_runs_(size_t{1}),
     has_reference_(false),
-    verificationTechnique(VerificationTechnique::AbsoluteDifference),
-    toleranceTreshold(kMaxL2Norm),
+    verification_technique_(VerificationTechnique::AbsoluteDifference),
+    tolerance_treshold_(kMaxL2Norm),
     suppress_output_(false),
     output_search_process_(false),
     search_log_filename_(std::string{}),
@@ -288,9 +288,9 @@ TunerImpl::TunerResult TunerImpl::RunKernel(const std::string &source, const Ker
     #ifdef VERBOSE
       fprintf(stdout, "%s Creating a copy of the output buffer\n", kMessageVerbose.c_str());
     #endif
-    for (auto &output: arguments_output_) {
+    for (auto &output : arguments_output_) {
       switch (output.type) {
-        case MemType::kShort: arguments_output_copy_.push_back(CopyOutputBuffer<short>(output)); break;
+        case MemType::kShort:arguments_output_copy_.push_back(CopyOutputBuffer<short>(output)); break;
         case MemType::kInt: arguments_output_copy_.push_back(CopyOutputBuffer<int>(output)); break;
         case MemType::kSizeT: arguments_output_copy_.push_back(CopyOutputBuffer<size_t>(output)); break;
         case MemType::kHalf: arguments_output_copy_.push_back(CopyOutputBuffer<half>(output)); break;
@@ -302,62 +302,112 @@ TunerImpl::TunerResult TunerImpl::RunKernel(const std::string &source, const Ker
       }
     }
 
-    // Sets the kernel and its arguments
-    #ifdef VERBOSE
-      fprintf(stdout, "%s Setting kernel arguments\n", kMessageVerbose.c_str());
-    #endif
-    auto tune_kernel = Kernel(program, kernel.name());
-    for (auto &i: arguments_input_) { tune_kernel.SetArgument(i.index, i.buffer); }
-    for (auto &i: arguments_output_copy_) { tune_kernel.SetArgument(i.index, i.buffer); }
-    for (auto &i: arguments_int_) { tune_kernel.SetArgument(i.first, i.second); }
-    for (auto &i: arguments_size_t_) { tune_kernel.SetArgument(i.first, i.second); }
-    for (auto &i: arguments_float_) { tune_kernel.SetArgument(i.first, i.second); }
-    for (auto &i: arguments_double_) { tune_kernel.SetArgument(i.first, i.second); }
-    for (auto &i: arguments_float2_) { tune_kernel.SetArgument(i.first, i.second); }
-    for (auto &i: arguments_double2_) { tune_kernel.SetArgument(i.first, i.second); }
-
     // Sets the global and local thread-sizes
     auto global = kernel.global();
     auto local = kernel.local();
 
-    // Verifies the local memory usage of the kernel
-    auto local_mem_usage = tune_kernel.LocalMemUsage(device_);
-    if (!device_.IsLocalMemoryValid(local_mem_usage)) {
-      throw std::runtime_error("Using too much local memory");
-    }
-
-    // Prepares the kernel
-    queue_.Finish();
-
-    // Runs the kernel (this is the timed part)
-    fprintf(stdout, "%s Running %s\n", kMessageRun.c_str(), kernel.name().c_str());
-    auto events = std::vector<Event>(num_runs_);
-    for (auto t=size_t{0}; t<num_runs_; ++t) {
+    // Runs the kernel specified number of iterations over different input / output sections
+    float total_elapsed_time = 0.0f;
+    for (auto iteration = size_t{ 0 }; iteration < kernel.num_iterations(); iteration++) {
+      // Sets the kernel and its arguments
       #ifdef VERBOSE
-        fprintf(stdout, "%s Launching kernel (%zu out of %zu for averaging)\n", kMessageVerbose.c_str(),
-                t + 1, num_runs_);
+        fprintf(stdout, "%s Setting kernel arguments\n", kMessageVerbose.c_str());
       #endif
-      tune_kernel.Launch(queue_, global, local, events[t].pointer());
-      queue_.Finish(events[t]);
-    }
-    queue_.Finish();
+      auto tune_kernel = Kernel(program, kernel.name());
+      
+      // If kernel runs over multiple iterations, buffer is split into smaller sections of equal
+      // size. Different section is used in each iteration. The buffer is split in different way
+      // based on whether OpenCL or CUDA is used.
+      #ifdef USE_OPENCL
+        if (kernel.num_iterations() == 1) {
+          for (auto &i : arguments_input_) { tune_kernel.SetArgument(i.index, i.buffer); }
+          for (auto &i : arguments_output_copy_) { tune_kernel.SetArgument(i.index, i.buffer); }
+        }
+        else {
+          for (auto &i : arguments_input_) {
+            cl_buffer_region region;
+            region.origin = i.stride * iteration;
+            region.size = i.stride;
+            tune_kernel.SetArgument(i.index, clCreateSubBuffer(i.buffer, CL_MEM_READ_WRITE,
+                                              CL_BUFFER_CREATE_TYPE_REGION, &region, NULL));
+          }
+          for (auto &i : arguments_output_copy_) {
+            cl_buffer_region region;
+            region.origin = i.stride * iteration;
+            region.size = i.stride;
+            tune_kernel.SetArgument(i.index, clCreateSubBuffer(i.buffer, CL_MEM_READ_WRITE,
+                                              CL_BUFFER_CREATE_TYPE_REGION, &region, NULL));
+          }
+        }
+      #else
+        if (kernel.num_iterations() == 1) {
+          for (auto &i : arguments_input_) { tune_kernel.SetArgument(i.index, i.buffer); }
+          for (auto &i : arguments_output_copy_) { tune_kernel.SetArgument(i.index, i.buffer); }
+        }
+        else {
+          // Warning: CUDA version of buffer split was NOT tested yet
+          for (auto &i : arguments_input_) {
+            tune_kernel.SetArgument(i.index, i.buffer + stride * iteration);
+          }
+          for (auto &i : arguments_output_copy_) {
+            tune_kernel.SetArgument(i.index, i.buffer + stride * iteration);
+          }
+        }
+      #endif
+      for (auto &i : arguments_int_) { tune_kernel.SetArgument(i.first, i.second); }
+      for (auto &i : arguments_size_t_) { tune_kernel.SetArgument(i.first, i.second); }
+      for (auto &i : arguments_float_) { tune_kernel.SetArgument(i.first, i.second); }
+      for (auto &i : arguments_double_) { tune_kernel.SetArgument(i.first, i.second); }
+      for (auto &i : arguments_float2_) { tune_kernel.SetArgument(i.first, i.second); }
+      for (auto &i : arguments_double2_) { tune_kernel.SetArgument(i.first, i.second); }
 
-    // Collects the timing information
-    auto elapsed_time = std::numeric_limits<float>::max();
-    for (auto t=size_t{0}; t<num_runs_; ++t) {
-      auto this_elapsed_time = events[t].GetElapsedTime();
-      elapsed_time = std::min(elapsed_time, this_elapsed_time);
+      // Verifies the local memory usage of the kernel
+      auto local_mem_usage = tune_kernel.LocalMemUsage(device_);
+      if (!device_.IsLocalMemoryValid(local_mem_usage)) {
+          throw std::runtime_error("Using too much local memory");
+      }
+
+      // Prepares the kernel
+      queue_.Finish();
+
+      // Runs the kernel (this is the timed part)
+      if (kernel.num_iterations() == 1) {
+        fprintf(stdout, "%s Running %s\n", kMessageRun.c_str(), kernel.name().c_str());
+      }
+      else {
+        fprintf(stdout, "%s Running %s (Iteration %u / %u)\n", kMessageRun.c_str(),
+                kernel.name().c_str(), iteration + 1, kernel.num_iterations());
+      }
+      auto events = std::vector<Event>(num_runs_);
+      for (auto t = size_t{ 0 }; t<num_runs_; ++t) {
+        #ifdef VERBOSE
+          fprintf(stdout, "%s Launching kernel (%zu out of %zu for averaging)\n",
+                  kMessageVerbose.c_str(), t + 1, num_runs_);
+        #endif
+        tune_kernel.Launch(queue_, global, local, events[t].pointer());
+        queue_.Finish(events[t]);
+      }
+      queue_.Finish();
+
+      // Collects the timing information
+      auto elapsed_time = std::numeric_limits<float>::max();
+      for (auto t = size_t{ 0 }; t<num_runs_; ++t) {
+        auto this_elapsed_time = events[t].GetElapsedTime();
+        elapsed_time = std::min(elapsed_time, this_elapsed_time);
+      }
+
+      total_elapsed_time += elapsed_time;
     }
 
     // Prints diagnostic information
     fprintf(stdout, "%s Completed %s (%.1lf ms) - %zu out of %zu\n",
-            kMessageOK.c_str(), kernel.name().c_str(), elapsed_time,
+            kMessageOK.c_str(), kernel.name().c_str(), total_elapsed_time,
             configuration_id+1, num_configurations);
 
     // Computes the result of the tuning
-    auto local_threads = size_t{1};
-    for (auto &item: local) { local_threads *= item; }
-    TunerResult result = {kernel.name(), elapsed_time, local_threads, false, {}};
+    auto local_threads = size_t{ 1 };
+    for (auto &item : local) { local_threads *= item; }
+    TunerResult result = {kernel.name(), total_elapsed_time, local_threads, false, {}};
     return result;
   }
 
@@ -380,7 +430,7 @@ TunerImpl::MemArgument TunerImpl::CopyOutputBuffer(MemArgument &argument) {
   auto buffer_copy = Buffer<T>(context_, BufferAccess::kNotOwned, argument.size);
   auto buffer_source = Buffer<T>(argument.buffer);
   buffer_source.CopyTo(queue_, argument.size, buffer_copy);
-  auto result = MemArgument{argument.index, argument.size, argument.type, buffer_copy()};
+  auto result = MemArgument{argument.index, argument.size, argument.type, buffer_copy(), argument.stride};
   return result;
 }
 
@@ -449,30 +499,28 @@ bool TunerImpl::DownloadAndCompare(MemArgument &device_buffer, const size_t i) {
   T* reference_output = static_cast<T*>(reference_outputs_[i]);
 
   // Compares the results (L2 norm)
-  if (verificationTechnique == VerificationTechnique::AbsoluteDifference)
-  {
-      for (auto j = size_t{ 0 }; j<device_buffer.size; ++j) {
-          l2_norm += AbsoluteDifference(reference_output[j], host_buffer[j]);
-      }
+  if (verification_technique_ == VerificationTechnique::AbsoluteDifference) {
+    for (auto j = size_t{ 0 }; j<device_buffer.size; ++j) {
+      l2_norm += AbsoluteDifference(reference_output[j], host_buffer[j]);
+    }
 
-      // Verifies if everything was OK, if not: print the L2 norm
-      if (std::isnan(l2_norm) || l2_norm > toleranceTreshold) {
-          fprintf(stderr, "%s Results differ: L2 norm is %6.2e\n", kMessageWarning.c_str(), l2_norm);
-          return false;
-      }
-      return true;
+    // Verifies if everything was OK, if not: print the L2 norm
+    if (std::isnan(l2_norm) || l2_norm > tolerance_treshold_) {
+      fprintf(stderr, "%s Results differ: L2 norm is %6.2e\n", kMessageWarning.c_str(), l2_norm);
+      return false;
+    }
+    return true;
   }
-  else if (verificationTechnique == VerificationTechnique::SideBySide)
-  {
-      for (auto j = size_t{ 0 }; j<device_buffer.size; ++j)
-      {
-          if (AbsoluteDifference(reference_output[j], host_buffer[j]) > toleranceTreshold)
-          {
-              fprintf(stderr, "%s Results differ: difference is %.8lf\n", kMessageWarning.c_str(), AbsoluteDifference(reference_output[j], host_buffer[j]));
-              return false;
-          }
+  else if (verification_technique_ == VerificationTechnique::SideBySide) {
+    for (auto j = size_t{ 0 }; j<device_buffer.size; ++j)
+    {
+      if (AbsoluteDifference(reference_output[j], host_buffer[j]) > tolerance_treshold_) {
+        fprintf(stderr, "%s Different results for position %u in output: difference is %.8lf\n",
+                kMessageWarning.c_str(), j, AbsoluteDifference(reference_output[j], host_buffer[j]));
+        return false;
       }
-      return true;
+    }
+    return true;
   }
 }
 

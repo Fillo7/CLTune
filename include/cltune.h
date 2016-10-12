@@ -118,8 +118,11 @@ class Tuner {
 
   // Functions to add kernel-arguments for input buffers, output buffers, and scalars. Make sure to
   // call these in the order in which the arguments appear in the kernel.
-  template <typename T> void AddArgumentInput(const std::vector<T> &source);
-  template <typename T> void AddArgumentOutput(const std::vector<T> &source);
+  // Stride parameter needs to be specified only if argument is used by kernel which produces result
+  // over multiple kernel iterations. Parameter specifies amount of bytes that are used in single
+  // iteration.
+  template <typename T> void AddArgumentInput(const std::vector<T> &source, const size_t stride = 0);
+  template <typename T> void AddArgumentOutput(const std::vector<T> &source, const size_t stride = 0);
   template <typename T> void AddArgumentScalar(const T argument);
 
   // Configures a specific search method. The default search method is "FullSearch". These are
@@ -130,10 +133,16 @@ class Tuner {
   void PUBLIC_API UsePSO(const double fraction, const size_t swarm_size, const double influence_global,
                          const double influence_local, const double influence_random);
 
-  // Uses chosen method for results comparison. Currently available techniques are absolute difference
-  // and side by side comparison.
-  void PUBLIC_API ChooseVerificationTechnique(VerificationTechnique technique);
-  void PUBLIC_API ChooseVerificationTechnique(VerificationTechnique technique, double toleranceTreshold);
+  // Uses chosen technique for results comparison. Currently available techniques are absolute
+  // difference and side by side comparison.
+  void PUBLIC_API ChooseVerificationTechnique(const VerificationTechnique technique);
+  void PUBLIC_API ChooseVerificationTechnique(const VerificationTechnique technique,
+                                              const double tolerance_treshold);
+
+  // Sets number of iterations that kernel has to run in order to produce complete result.
+  // This method has to be called only for kernels that compute the result over multiple iterations
+  // with different input in each iteration.
+  void PUBLIC_API SetNumKernelIterations(const size_t id, const size_t num_iterations);
 
   // Outputs the search process to a file
   void PUBLIC_API OutputSearchLog(const std::string &filename);
