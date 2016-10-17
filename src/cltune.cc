@@ -130,6 +130,20 @@ void Tuner::DivLocalSize(const size_t id, const StringRange range) {
   pimpl->kernels_[id].AddModifier(range, KernelInfo::ThreadSizeModifierType::kLocalDiv);
 }
 
+void Tuner::SetMultirunKernelIterations(const size_t id, const std::string &parameter_name) {
+  if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
+  if (!pimpl->kernels_[id].ParameterExists(parameter_name)) { throw std::runtime_error("Invalid parameter name"); }
+  
+  for (auto parameter : pimpl->kernels_[id].parameters()) {
+    if (parameter.name == parameter_name) {
+        for (auto value : parameter.values) {
+          if (value < 1) { throw std::runtime_error("Invalid number of iterations"); }
+        }
+        pimpl->kernels_[id].set_iterations(parameter.values);
+    }
+  }
+}
+
 // Adds a contraint to the list of constraints for a particular kernel. First checks whether the
 // kernel exists and whether the parameters exist.
 void Tuner::AddConstraint(const size_t id, ConstraintFunction valid_if,
@@ -271,13 +285,6 @@ void Tuner::ChooseVerificationTechnique(const VerificationTechnique technique,
   if (tolerance_treshold < 0.0) { throw std::runtime_error("Invalid tolerance treshold"); }
   pimpl->verification_technique_ = technique;
   pimpl->tolerance_treshold_ = tolerance_treshold;
-}
-
-// Sets number of iterations needed to complete computation
-void Tuner::SetNumKernelIterations(const size_t id, const size_t num_iterations) {
-  if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
-  if (num_iterations < 1) { throw std::runtime_error("Invalid number of iterations"); }
-  pimpl->kernels_[id].set_num_iterations(num_iterations);
 }
 
 // Output the search process to a file. This is disabled per default.

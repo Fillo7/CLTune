@@ -211,6 +211,9 @@ void TunerImpl::Tune() {
         // Updates the local range with the parameter values
         kernel.ComputeRanges(permutation);
 
+        // Updates number of kernel iterations based on parameter value
+        kernel.SetNumCurrentIterations(permutation);
+
         // Compiles and runs the kernel
         auto tuning_result = RunKernel(source, kernel, p, search->NumConfigurations());
         tuning_result.status = VerifyOutput();
@@ -308,7 +311,7 @@ TunerImpl::TunerResult TunerImpl::RunKernel(const std::string &source, const Ker
 
     // Runs the kernel specified number of iterations over different input / output sections
     float total_elapsed_time = 0.0f;
-    for (auto iteration = size_t{ 0 }; iteration < kernel.num_iterations(); iteration++) {
+    for (auto iteration = size_t{ 0 }; iteration < kernel.num_current_iterations(); iteration++) {
       // Sets the kernel and its arguments
       #ifdef VERBOSE
         fprintf(stdout, "%s Setting kernel arguments\n", kMessageVerbose.c_str());
@@ -319,22 +322,24 @@ TunerImpl::TunerResult TunerImpl::RunKernel(const std::string &source, const Ker
       // size. Different section is used in each iteration. The buffer is split in different way
       // based on whether OpenCL or CUDA is used.
       #ifdef USE_OPENCL
-        if (kernel.num_iterations() == 1) {
+        if (kernel.iterations().at(0) == 1) {
           for (auto &i : arguments_input_) { tune_kernel.SetArgument(i.index, i.buffer); }
           for (auto &i : arguments_output_copy_) { tune_kernel.SetArgument(i.index, i.buffer); }
         }
         else {
           for (auto &i : arguments_input_) {
             cl_buffer_region region;
-            region.origin = i.stride * iteration;
-            region.size = i.stride;
+            size_t memory_per_iteration = i.size * sizeof(i.type) / kernel.num_current_iterations();
+            region.origin = memory_per_iteration * iteration;
+            region.size = memory_per_iteration;
             tune_kernel.SetArgument(i.index, clCreateSubBuffer(i.buffer, CL_MEM_READ_WRITE,
                                               CL_BUFFER_CREATE_TYPE_REGION, &region, NULL));
           }
           for (auto &i : arguments_output_copy_) {
             cl_buffer_region region;
-            region.origin = i.stride * iteration;
-            region.size = i.stride;
+            size_t memory_per_iteration = i.size * sizeof(i.type) / kernel.num_current_iterations();
+            region.origin = memory_per_iteration * iteration;
+            region.size = memory_per_iteration;
             tune_kernel.SetArgument(i.index, clCreateSubBuffer(i.buffer, CL_MEM_READ_WRITE,
                                               CL_BUFFER_CREATE_TYPE_REGION, &region, NULL));
           }
@@ -347,10 +352,12 @@ TunerImpl::TunerResult TunerImpl::RunKernel(const std::string &source, const Ker
         else {
           // Warning: CUDA version of buffer split was NOT tested yet
           for (auto &i : arguments_input_) {
-            tune_kernel.SetArgument(i.index, i.buffer + stride * iteration);
+            size_t memory_per_iteration = i.size * sizeof(i.type) / kernel.num_current_iterations();
+            tune_kernel.SetArgument(i.index, i.buffer + memory_per_iteration * iteration);
           }
           for (auto &i : arguments_output_copy_) {
-            tune_kernel.SetArgument(i.index, i.buffer + stride * iteration);
+            size_t memory_per_iteration = i.size * sizeof(i.type) / kernel.num_current_iterations();
+            tune_kernel.SetArgument(i.index, i.buffer + memory_per_iteration * iteration);
           }
         }
       #endif
@@ -371,12 +378,12 @@ TunerImpl::TunerResult TunerImpl::RunKernel(const std::string &source, const Ker
       queue_.Finish();
 
       // Runs the kernel (this is the timed part)
-      if (kernel.num_iterations() == 1) {
+      if (kernel.iterations().at(0) == 1) {
         fprintf(stdout, "%s Running %s\n", kMessageRun.c_str(), kernel.name().c_str());
       }
       else {
         fprintf(stdout, "%s Running %s (Iteration %u / %u)\n", kMessageRun.c_str(),
-                kernel.name().c_str(), iteration + 1, kernel.num_iterations());
+                kernel.name().c_str(), iteration + 1, kernel.iterations().at(0));
       }
       auto events = std::vector<Event>(num_runs_);
       for (auto t = size_t{ 0 }; t<num_runs_; ++t) {
