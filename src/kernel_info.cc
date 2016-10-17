@@ -45,7 +45,7 @@ KernelInfo::KernelInfo(const std::string name, const std::string source, const D
   device_(device),
   global_base_(), local_base_(),
   global_(), local_(),
-  iterations_(IterationsModifier{ std::vector<size_t>{0}, std::string{""} }),
+  iterations_(IterationsModifier{ std::vector<size_t>{1}, std::string{""} }),
   num_current_iterations_(1),
   thread_size_modifiers_() {
 }

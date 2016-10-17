@@ -106,7 +106,7 @@ class Tuner {
 
   // Sets number of iterations that multirun kernel has to complete in order to produce complete
   // result. Number of iterations is specified by previously added tuning parameter, which allows
-  // it to become one of the tuning parameters. Single run kernels do not need to use this method.
+  // it to become part of the tuning process. Single run kernels do not need to use this method.
   void PUBLIC_API SetMultirunKernelIterations(const size_t id, const std::string &parameter_name);
 
   // Adds a new constraint to the set of parameters (e.g. must be equal or larger than). The
@@ -123,11 +123,8 @@ class Tuner {
 
   // Functions to add kernel-arguments for input buffers, output buffers, and scalars. Make sure to
   // call these in the order in which the arguments appear in the kernel.
-  // Stride parameter needs to be specified only if argument is used by kernel which produces result
-  // over multiple kernel iterations. Parameter specifies amount of bytes that are used in single
-  // iteration.
-  template <typename T> void AddArgumentInput(const std::vector<T> &source, const size_t stride = 0);
-  template <typename T> void AddArgumentOutput(const std::vector<T> &source, const size_t stride = 0);
+  template <typename T> void AddArgumentInput(const std::vector<T> &source);
+  template <typename T> void AddArgumentOutput(const std::vector<T> &source);
   template <typename T> void AddArgumentScalar(const T argument);
 
   // Configures a specific search method. The default search method is "FullSearch". These are
