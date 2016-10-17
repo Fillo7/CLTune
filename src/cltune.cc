@@ -139,7 +139,7 @@ void Tuner::SetMultirunKernelIterations(const size_t id, const std::string &para
         for (auto value : parameter.values) {
           if (value < 1) { throw std::runtime_error("Invalid number of iterations"); }
         }
-        pimpl->kernels_[id].set_iterations(parameter.values);
+        pimpl->kernels_[id].set_iterations(parameter.values, parameter.name);
     }
   }
 }

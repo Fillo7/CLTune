@@ -322,7 +322,7 @@ TunerImpl::TunerResult TunerImpl::RunKernel(const std::string &source, const Ker
       // size. Different section is used in each iteration. The buffer is split in different way
       // based on whether OpenCL or CUDA is used.
       #ifdef USE_OPENCL
-        if (kernel.iterations().at(0) == 1) {
+        if (kernel.num_current_iterations() == 1) {
           for (auto &i : arguments_input_) { tune_kernel.SetArgument(i.index, i.buffer); }
           for (auto &i : arguments_output_copy_) { tune_kernel.SetArgument(i.index, i.buffer); }
         }
@@ -378,12 +378,12 @@ TunerImpl::TunerResult TunerImpl::RunKernel(const std::string &source, const Ker
       queue_.Finish();
 
       // Runs the kernel (this is the timed part)
-      if (kernel.iterations().at(0) == 1) {
+      if (kernel.num_current_iterations() == 1) {
         fprintf(stdout, "%s Running %s\n", kMessageRun.c_str(), kernel.name().c_str());
       }
       else {
         fprintf(stdout, "%s Running %s (Iteration %u / %u)\n", kMessageRun.c_str(),
-                kernel.name().c_str(), iteration + 1, kernel.iterations().at(0));
+                kernel.name().c_str(), iteration + 1, kernel.num_current_iterations());
       }
       auto events = std::vector<Event>(num_runs_);
       for (auto t = size_t{ 0 }; t<num_runs_; ++t) {
