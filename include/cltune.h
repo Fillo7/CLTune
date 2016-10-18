@@ -104,6 +104,11 @@ class Tuner {
   void PUBLIC_API MulLocalSize(const size_t id, const StringRange range);
   void PUBLIC_API DivLocalSize(const size_t id, const StringRange range);
 
+  // Sets number of iterations that multirun kernel has to complete in order to produce complete
+  // result. Number of iterations is specified by previously added tuning parameter, which allows
+  // it to become part of the tuning process. Single run kernels do not need to use this method.
+  void PUBLIC_API SetMultirunKernelIterations(const size_t id, const std::string &parameter_name);
+
   // Adds a new constraint to the set of parameters (e.g. must be equal or larger than). The
   // constraints come in the form of a function object which takes a number of tuning parameters,
   // given as a vector of strings (parameter names). Their names are later substituted by actual
@@ -118,11 +123,8 @@ class Tuner {
 
   // Functions to add kernel-arguments for input buffers, output buffers, and scalars. Make sure to
   // call these in the order in which the arguments appear in the kernel.
-  // Stride parameter needs to be specified only if argument is used by kernel which produces result
-  // over multiple kernel iterations. Parameter specifies amount of bytes that are used in single
-  // iteration.
-  template <typename T> void AddArgumentInput(const std::vector<T> &source, const size_t stride = 0);
-  template <typename T> void AddArgumentOutput(const std::vector<T> &source, const size_t stride = 0);
+  template <typename T> void AddArgumentInput(const std::vector<T> &source);
+  template <typename T> void AddArgumentOutput(const std::vector<T> &source);
   template <typename T> void AddArgumentScalar(const T argument);
 
   // Configures a specific search method. The default search method is "FullSearch". These are
@@ -138,11 +140,6 @@ class Tuner {
   void PUBLIC_API ChooseVerificationTechnique(const VerificationTechnique technique);
   void PUBLIC_API ChooseVerificationTechnique(const VerificationTechnique technique,
                                               const double tolerance_treshold);
-
-  // Sets number of iterations that kernel has to run in order to produce complete result.
-  // This method has to be called only for kernels that compute the result over multiple iterations
-  // with different input in each iteration.
-  void PUBLIC_API SetNumKernelIterations(const size_t id, const size_t num_iterations);
 
   // Outputs the search process to a file
   void PUBLIC_API OutputSearchLog(const std::string &filename);

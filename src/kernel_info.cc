@@ -45,7 +45,8 @@ KernelInfo::KernelInfo(const std::string name, const std::string source, const D
   device_(device),
   global_base_(), local_base_(),
   global_(), local_(),
-  num_iterations_(1),
+  iterations_(IterationsModifier{ std::vector<size_t>{1}, std::string{""} }),
+  num_current_iterations_(1),
   thread_size_modifiers_() {
 }
 
@@ -140,6 +141,23 @@ void KernelInfo::ComputeRanges(const Configuration &config) {
   // Stores the final integer results
   global_ = global_values;
   local_ = local_values;
+}
+
+void KernelInfo::SetNumCurrentIterations(const Configuration &config) {
+  bool found_string = false;
+  std::string modifier_string = iterations_.parameter_name;
+
+  for (auto &setting : config) {
+    if (modifier_string == setting.name) {
+      num_current_iterations_ = setting.value;
+      found_string = true;
+    }
+  }
+
+  // No replacement was found, there might be something wrong with the string
+  if (!found_string && modifier_string != "") {
+    throw Exception("Invalid kernel iterations modifier: " + modifier_string);
+  }
 }
 
 // =================================================================================================
