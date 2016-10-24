@@ -47,7 +47,21 @@ KernelInfo::KernelInfo(const std::string name, const std::string source, const D
   global_(), local_(),
   iterations_(IterationsModifier{ std::vector<size_t>{1}, std::string{""} }),
   num_current_iterations_(1),
+  argument_counter_(0),
   thread_size_modifiers_() {
+}
+
+KernelInfo::~KernelInfo() {
+  // Frees the device buffers
+  auto free_buffers = [](MemArgument &mem_info) {
+  #ifdef USE_OPENCL
+    CheckError(clReleaseMemObject(mem_info.buffer));
+  #else
+    CheckError(cuMemFree(mem_info.buffer));
+  #endif
+  };
+  for (auto &mem_argument : arguments_input_) { free_buffers(mem_argument); }
+  for (auto &mem_argument : arguments_output_) { free_buffers(mem_argument); }
 }
 
 // =================================================================================================

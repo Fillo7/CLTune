@@ -177,71 +177,81 @@ void Tuner::SetLocalMemoryUsage(const size_t id, LocalMemoryFunction amount,
 // Creates a new buffer of type Memory (containing both host and device data) based on a source
 // vector of data. Then, upload it to the device and store the argument in a list.
 template <typename T>
-void Tuner::AddArgumentInput(const std::vector<T> &source) {
+void Tuner::AddArgumentInput(const size_t id, const std::vector<T> &source) {
   auto device_buffer = Buffer<T>(pimpl->context(), BufferAccess::kNotOwned, source.size());
   device_buffer.Write(pimpl->queue(), source.size(), source);
-  auto argument = TunerImpl::MemArgument{pimpl->argument_counter_++, source.size(),
+  auto argument = KernelInfo::MemArgument{ /*pimpl->argument_counter_++*/ pimpl->kernels_[id].argument_counter(), source.size(),
                                          pimpl->GetType<T>(), device_buffer()};
-  pimpl->arguments_input_.push_back(argument);
+  pimpl->kernels_[id].AddArgumentInput(argument);
+  // pimpl->arguments_input_.push_back(argument);
 }
 
 // Compiles the function for various data-types
-template void PUBLIC_API Tuner::AddArgumentInput<short>(const std::vector<short>&);
-template void PUBLIC_API Tuner::AddArgumentInput<int>(const std::vector<int>&);
-template void PUBLIC_API Tuner::AddArgumentInput<size_t>(const std::vector<size_t>&);
-template void PUBLIC_API Tuner::AddArgumentInput<half>(const std::vector<half>&);
-template void PUBLIC_API Tuner::AddArgumentInput<float>(const std::vector<float>&);
-template void PUBLIC_API Tuner::AddArgumentInput<double>(const std::vector<double>&);
-template void PUBLIC_API Tuner::AddArgumentInput<float2>(const std::vector<float2>&);
-template void PUBLIC_API Tuner::AddArgumentInput<double2>(const std::vector<double2>&);
+template void PUBLIC_API Tuner::AddArgumentInput<short>(const size_t id, const std::vector<short>&);
+template void PUBLIC_API Tuner::AddArgumentInput<int>(const size_t id, const std::vector<int>&);
+template void PUBLIC_API Tuner::AddArgumentInput<size_t>(const size_t id, const std::vector<size_t>&);
+template void PUBLIC_API Tuner::AddArgumentInput<half>(const size_t id, const std::vector<half>&);
+template void PUBLIC_API Tuner::AddArgumentInput<float>(const size_t id, const std::vector<float>&);
+template void PUBLIC_API Tuner::AddArgumentInput<double>(const size_t id, const std::vector<double>&);
+template void PUBLIC_API Tuner::AddArgumentInput<float2>(const size_t id, const std::vector<float2>&);
+template void PUBLIC_API Tuner::AddArgumentInput<double2>(const size_t id, const std::vector<double2>&);
 
 // Similar to the above function, but now marked as output buffer. Output buffers are special in the
 // sense that they will be checked in the verification process.
 template <typename T>
-void Tuner::AddArgumentOutput(const std::vector<T> &source) {
+void Tuner::AddArgumentOutput(const size_t id, const std::vector<T> &source) {
   auto device_buffer = Buffer<T>(pimpl->context(), BufferAccess::kNotOwned, source.size());
   device_buffer.Write(pimpl->queue(), source.size(), source);
-  auto argument = TunerImpl::MemArgument{pimpl->argument_counter_++, source.size(),
+  auto argument = KernelInfo::MemArgument{ /*pimpl->argument_counter_++*/ pimpl->kernels_[id].argument_counter(), source.size(),
                                          pimpl->GetType<T>(), device_buffer()};
-  pimpl->arguments_output_.push_back(argument);
+  pimpl->kernels_[id].AddArgumentOutput(argument);
+  //pimpl->arguments_output_.push_back(argument);
 }
 
 // Compiles the function for various data-types
-template void PUBLIC_API Tuner::AddArgumentOutput<short>(const std::vector<short>&);
-template void PUBLIC_API Tuner::AddArgumentOutput<int>(const std::vector<int>&);
-template void PUBLIC_API Tuner::AddArgumentOutput<size_t>(const std::vector<size_t>&);
-template void PUBLIC_API Tuner::AddArgumentOutput<half>(const std::vector<half>&);
-template void PUBLIC_API Tuner::AddArgumentOutput<float>(const std::vector<float>&);
-template void PUBLIC_API Tuner::AddArgumentOutput<double>(const std::vector<double>&);
-template void PUBLIC_API Tuner::AddArgumentOutput<float2>(const std::vector<float2>&);
-template void PUBLIC_API Tuner::AddArgumentOutput<double2>(const std::vector<double2>&);
+template void PUBLIC_API Tuner::AddArgumentOutput<short>(const size_t id, const std::vector<short>&);
+template void PUBLIC_API Tuner::AddArgumentOutput<int>(const size_t id, const std::vector<int>&);
+template void PUBLIC_API Tuner::AddArgumentOutput<size_t>(const size_t id, const std::vector<size_t>&);
+template void PUBLIC_API Tuner::AddArgumentOutput<half>(const size_t id, const std::vector<half>&);
+template void PUBLIC_API Tuner::AddArgumentOutput<float>(const size_t id, const std::vector<float>&);
+template void PUBLIC_API Tuner::AddArgumentOutput<double>(const size_t id, const std::vector<double>&);
+template void PUBLIC_API Tuner::AddArgumentOutput<float2>(const size_t id, const std::vector<float2>&);
+template void PUBLIC_API Tuner::AddArgumentOutput<double2>(const size_t id, const std::vector<double2>&);
 
 // Sets a scalar value as an argument to the kernel. Since a vector of scalars of any type doesn't
 // exist, there is no general implemenation. Instead, each data-type has its specialised version in
 // which it stores to a specific vector.
-template <> void PUBLIC_API Tuner::AddArgumentScalar<short>(const short argument) {
-  pimpl->arguments_int_.push_back({pimpl->argument_counter_++, argument});
+template <> void PUBLIC_API Tuner::AddArgumentScalar<short>(const size_t id, const short argument) {
+  pimpl->kernels_[id].AddArgumentScalar(argument);
+  //pimpl->arguments_int_.push_back({pimpl->argument_counter_++, argument});
 }
-template <> void PUBLIC_API Tuner::AddArgumentScalar<int>(const int argument) {
-  pimpl->arguments_int_.push_back({pimpl->argument_counter_++, argument});
+template <> void PUBLIC_API Tuner::AddArgumentScalar<int>(const size_t id, const int argument) {
+  pimpl->kernels_[id].AddArgumentScalar(argument);
+  //pimpl->arguments_int_.push_back({pimpl->argument_counter_++, argument});
 }
-template <> void PUBLIC_API Tuner::AddArgumentScalar<size_t>(const size_t argument) {
-  pimpl->arguments_size_t_.push_back({pimpl->argument_counter_++, argument});
+template <> void PUBLIC_API Tuner::AddArgumentScalar<size_t>(const size_t id, const size_t argument) {
+  pimpl->kernels_[id].AddArgumentScalar(argument);
+  //pimpl->arguments_size_t_.push_back({pimpl->argument_counter_++, argument});
 }
-template <> void PUBLIC_API Tuner::AddArgumentScalar<half>(const half argument) {
-  pimpl->arguments_float_.push_back({pimpl->argument_counter_++, argument});
+template <> void PUBLIC_API Tuner::AddArgumentScalar<half>(const size_t id, const half argument) {
+  pimpl->kernels_[id].AddArgumentScalar(argument);
+  //pimpl->arguments_float_.push_back({pimpl->argument_counter_++, argument});
 }
-template <> void PUBLIC_API Tuner::AddArgumentScalar<float>(const float argument) {
-  pimpl->arguments_float_.push_back({pimpl->argument_counter_++, argument});
+template <> void PUBLIC_API Tuner::AddArgumentScalar<float>(const size_t id, const float argument) {
+  pimpl->kernels_[id].AddArgumentScalar(argument);
+  //pimpl->arguments_float_.push_back({pimpl->argument_counter_++, argument});
 }
-template <> void PUBLIC_API Tuner::AddArgumentScalar<double>(const double argument) {
-  pimpl->arguments_double_.push_back({pimpl->argument_counter_++, argument});
+template <> void PUBLIC_API Tuner::AddArgumentScalar<double>(const size_t id, const double argument) {
+  pimpl->kernels_[id].AddArgumentScalar(argument);
+  //pimpl->arguments_double_.push_back({pimpl->argument_counter_++, argument});
 }
-template <> void PUBLIC_API Tuner::AddArgumentScalar<float2>(const float2 argument) {
-  pimpl->arguments_float2_.push_back({pimpl->argument_counter_++, argument});
+template <> void PUBLIC_API Tuner::AddArgumentScalar<float2>(const size_t id, const float2 argument) {
+  pimpl->kernels_[id].AddArgumentScalar(argument);
+  //pimpl->arguments_float2_.push_back({pimpl->argument_counter_++, argument});
 }
-template <> void PUBLIC_API Tuner::AddArgumentScalar<double2>(const double2 argument) {
-  pimpl->arguments_double2_.push_back({pimpl->argument_counter_++, argument});
+template <> void PUBLIC_API Tuner::AddArgumentScalar<double2>(const size_t id, const double2 argument) {
+  pimpl->kernels_[id].AddArgumentScalar(argument);
+  //pimpl->arguments_double2_.push_back({pimpl->argument_counter_++, argument});
 }
 
 // =================================================================================================

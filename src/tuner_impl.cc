@@ -76,8 +76,8 @@ TunerImpl::TunerImpl():
     output_search_process_(false),
     search_log_filename_(std::string{}),
     search_method_(SearchMethod::FullSearch),
-    search_args_(0),
-    argument_counter_(0) {
+    search_args_(0)
+    /*argument_counter_(0)*/ {
   if (!suppress_output_) {
     fprintf(stdout, "\n%s Initializing on platform 0 device 0\n", kMessageFull.c_str());
     auto opencl_version = device_.Version();
@@ -101,8 +101,8 @@ TunerImpl::TunerImpl(size_t platform_id, size_t device_id):
     output_search_process_(false),
     search_log_filename_(std::string{}),
     search_method_(SearchMethod::FullSearch),
-    search_args_(0),
-    argument_counter_(0) {
+    search_args_(0)
+    /*argument_counter_(0)*/ {
   if (!suppress_output_) {
     fprintf(stdout, "\n%s Initializing on platform %zu device %zu\n",
             kMessageFull.c_str(), platform_id, device_id);
@@ -120,15 +120,15 @@ TunerImpl::~TunerImpl() {
   }
 
   // Frees the device buffers
-  auto free_buffers = [](MemArgument &mem_info) {
+  auto free_buffers = [](KernelInfo::MemArgument &mem_info) {
     #ifdef USE_OPENCL
       CheckError(clReleaseMemObject(mem_info.buffer));
     #else
       CheckError(cuMemFree(mem_info.buffer));
     #endif
   };
-  for (auto &mem_argument: arguments_input_) { free_buffers(mem_argument); }
-  for (auto &mem_argument: arguments_output_) { free_buffers(mem_argument); }
+  /*for (auto &mem_argument: arguments_input_) { free_buffers(mem_argument); }
+  for (auto &mem_argument: arguments_output_) { free_buffers(mem_argument); }*/
   for (auto &mem_argument: arguments_output_copy_) { free_buffers(mem_argument); }
 
   if (!suppress_output_) {
@@ -291,7 +291,7 @@ TunerImpl::TunerResult TunerImpl::RunKernel(const std::string &source, const Ker
     #ifdef VERBOSE
       fprintf(stdout, "%s Creating a copy of the output buffer\n", kMessageVerbose.c_str());
     #endif
-    for (auto &output : arguments_output_) {
+    for (auto &output : kernel.arguments_output()) {
       switch (output.type) {
         case MemType::kShort:arguments_output_copy_.push_back(CopyOutputBuffer<short>(output)); break;
         case MemType::kInt: arguments_output_copy_.push_back(CopyOutputBuffer<int>(output)); break;
@@ -323,11 +323,11 @@ TunerImpl::TunerResult TunerImpl::RunKernel(const std::string &source, const Ker
       // based on whether OpenCL or CUDA is used.
       #ifdef USE_OPENCL
         if (kernel.num_current_iterations() == 1) {
-          for (auto &i : arguments_input_) { tune_kernel.SetArgument(i.index, i.buffer); }
+          for (auto &i : kernel.arguments_input()) { tune_kernel.SetArgument(i.index, i.buffer); }
           for (auto &i : arguments_output_copy_) { tune_kernel.SetArgument(i.index, i.buffer); }
         }
         else {
-          for (auto &i : arguments_input_) {
+          for (auto &i : kernel.arguments_input()) {
             cl_buffer_region region;
             size_t memory_per_iteration = i.size * sizeof(i.type) / kernel.num_current_iterations();
             region.origin = memory_per_iteration * iteration;
@@ -346,12 +346,12 @@ TunerImpl::TunerResult TunerImpl::RunKernel(const std::string &source, const Ker
         }
       #else
         if (kernel.num_iterations() == 1) {
-          for (auto &i : arguments_input_) { tune_kernel.SetArgument(i.index, i.buffer); }
+          for (auto &i : kernel.arguments_input()) { tune_kernel.SetArgument(i.index, i.buffer); }
           for (auto &i : arguments_output_copy_) { tune_kernel.SetArgument(i.index, i.buffer); }
         }
         else {
           // Warning: CUDA version of buffer split was NOT tested yet
-          for (auto &i : arguments_input_) {
+          for (auto &i : kernel.arguments_input()) {
             size_t memory_per_iteration = i.size * sizeof(i.type) / kernel.num_current_iterations();
             tune_kernel.SetArgument(i.index, i.buffer + memory_per_iteration * iteration);
           }
@@ -361,12 +361,12 @@ TunerImpl::TunerResult TunerImpl::RunKernel(const std::string &source, const Ker
           }
         }
       #endif
-      for (auto &i : arguments_int_) { tune_kernel.SetArgument(i.first, i.second); }
-      for (auto &i : arguments_size_t_) { tune_kernel.SetArgument(i.first, i.second); }
-      for (auto &i : arguments_float_) { tune_kernel.SetArgument(i.first, i.second); }
-      for (auto &i : arguments_double_) { tune_kernel.SetArgument(i.first, i.second); }
-      for (auto &i : arguments_float2_) { tune_kernel.SetArgument(i.first, i.second); }
-      for (auto &i : arguments_double2_) { tune_kernel.SetArgument(i.first, i.second); }
+      for (auto &i : kernel.arguments_int()) { tune_kernel.SetArgument(i.first, i.second); }
+      for (auto &i : kernel.arguments_size_t()) { tune_kernel.SetArgument(i.first, i.second); }
+      for (auto &i : kernel.arguments_float()) { tune_kernel.SetArgument(i.first, i.second); }
+      for (auto &i : kernel.arguments_double()) { tune_kernel.SetArgument(i.first, i.second); }
+      for (auto &i : kernel.arguments_float2()) { tune_kernel.SetArgument(i.first, i.second); }
+      for (auto &i : kernel.arguments_double2()) { tune_kernel.SetArgument(i.first, i.second); }
 
       // Verifies the local memory usage of the kernel
       auto local_mem_usage = tune_kernel.LocalMemUsage(device_);
@@ -433,11 +433,11 @@ TunerImpl::TunerResult TunerImpl::RunKernel(const std::string &source, const Ker
 // be an input buffer at the same time. Every kernel might override it, so it needs to be updated
 // before each run.
 template <typename T>
-TunerImpl::MemArgument TunerImpl::CopyOutputBuffer(MemArgument &argument) {
+KernelInfo::MemArgument TunerImpl::CopyOutputBuffer(KernelInfo::MemArgument &argument) {
   auto buffer_copy = Buffer<T>(context_, BufferAccess::kNotOwned, argument.size);
   auto buffer_source = Buffer<T>(argument.buffer);
   buffer_source.CopyTo(queue_, argument.size, buffer_copy);
-  auto result = MemArgument{argument.index, argument.size, argument.type, buffer_copy()};
+  auto result = KernelInfo::MemArgument{argument.index, argument.size, argument.type, buffer_copy()};
   return result;
 }
 
@@ -461,7 +461,7 @@ void TunerImpl::StoreReferenceOutput() {
     }
   }
 }
-template <typename T> void TunerImpl::DownloadReference(MemArgument &device_buffer) {
+template <typename T> void TunerImpl::DownloadReference(KernelInfo::MemArgument &device_buffer) {
   auto host_buffer = new T[device_buffer.size];
   Buffer<T>(device_buffer.buffer).Read(queue_, device_buffer.size, host_buffer);
   reference_outputs_.push_back(host_buffer);
@@ -497,7 +497,7 @@ bool TunerImpl::VerifyOutput() {
 
 // See above comment
 template <typename T>
-bool TunerImpl::DownloadAndCompare(MemArgument &device_buffer, const size_t i) {
+bool TunerImpl::DownloadAndCompare(KernelInfo::MemArgument &device_buffer, const size_t i) {
   auto l2_norm = 0.0;
 
   // Downloads the results to the host

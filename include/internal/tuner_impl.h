@@ -53,20 +53,6 @@
 namespace cltune {
 // =================================================================================================
 
-// Shorthands for complex data-types
-using float2 = std::complex<float>; // cl_float2;
-using double2 = std::complex<double>; // cl_double2;
-
-// Raw device buffer
-#if USE_OPENCL
-  using BufferRaw = cl_mem;
-#else
-  using BufferRaw = CUdeviceptr;
-#endif
-
-// Enumeration of currently supported data-types by this class
-enum class MemType { kShort, kInt, kSizeT, kHalf, kFloat, kDouble, kFloat2, kDouble2 };
-
 // See comment at top of file for a description of the class
 class TunerImpl {
  // Note that everything here is public because of the Pimpl-idiom
@@ -86,14 +72,6 @@ class TunerImpl {
   static const std::string kMessageFailure;
   static const std::string kMessageResult;
   static const std::string kMessageBest;
-
-  // Helper structure to store a device memory argument for a kernel
-  struct MemArgument {
-    size_t index;       // The kernel-argument index
-    size_t size;        // The number of elements (not bytes)
-    MemType type;       // The data-type (e.g. float)
-    BufferRaw buffer;   // The buffer on the device
-  };
 
   // Helper structure to hold the results of a tuning run
   struct TunerResult {
@@ -117,15 +95,15 @@ class TunerImpl {
                         const size_t configuration_id, const size_t num_configurations);
 
   // Copies an output buffer
-  template <typename T> MemArgument CopyOutputBuffer(MemArgument &argument);
+  template <typename T> KernelInfo::MemArgument CopyOutputBuffer(KernelInfo::MemArgument &argument);
 
   // Stores the output of the reference run into the host memory
   void StoreReferenceOutput();
-  template <typename T> void DownloadReference(MemArgument &device_buffer);
+  template <typename T> void DownloadReference(KernelInfo::MemArgument &device_buffer);
 
   // Downloads the output of a tuning run and compares it against the reference run
   bool VerifyOutput();
-  template <typename T> bool DownloadAndCompare(MemArgument &device_buffer, const size_t i);
+  template <typename T> bool DownloadAndCompare(KernelInfo::MemArgument &device_buffer, const size_t i);
   template <typename T> double AbsoluteDifference(const T reference, const T result);
 
   // Trains and uses a machine learning model based on the search space explored so far
@@ -172,17 +150,17 @@ class TunerImpl {
   double tolerance_treshold_;
 
   // Storage of kernel sources, arguments, and parameters
-  size_t argument_counter_;
+  //size_t argument_counter_;
   std::vector<KernelInfo> kernels_;
-  std::vector<MemArgument> arguments_input_;
-  std::vector<MemArgument> arguments_output_; // these remain constant
-  std::vector<MemArgument> arguments_output_copy_; // these may be modified by the kernel
-  std::vector<std::pair<size_t,int>> arguments_int_;
+  /*std::vector<MemArgument> arguments_input_;
+  std::vector<MemArgument> arguments_output_; // these remain constant*/
+  std::vector<KernelInfo::MemArgument> arguments_output_copy_; // these may be modified by the kernel
+  /*std::vector<std::pair<size_t,int>> arguments_int_;
   std::vector<std::pair<size_t,size_t>> arguments_size_t_;
   std::vector<std::pair<size_t,float>> arguments_float_;
   std::vector<std::pair<size_t,double>> arguments_double_;
   std::vector<std::pair<size_t,float2>> arguments_float2_;
-  std::vector<std::pair<size_t,double2>> arguments_double2_;
+  std::vector<std::pair<size_t,double2>> arguments_double2_;*/
 
   // Storage for the reference kernel and output
   std::unique_ptr<KernelInfo> reference_kernel_;

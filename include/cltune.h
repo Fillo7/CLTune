@@ -123,9 +123,9 @@ class Tuner {
 
   // Functions to add kernel-arguments for input buffers, output buffers, and scalars. Make sure to
   // call these in the order in which the arguments appear in the kernel.
-  template <typename T> void AddArgumentInput(const std::vector<T> &source);
-  template <typename T> void AddArgumentOutput(const std::vector<T> &source);
-  template <typename T> void AddArgumentScalar(const T argument);
+  template <typename T> void AddArgumentInput(const size_t id, const std::vector<T> &source);
+  template <typename T> void AddArgumentOutput(const size_t id, const std::vector<T> &source);
+  template <typename T> void AddArgumentScalar(const size_t id, const T argument);
 
   // Configures a specific search method. The default search method is "FullSearch". These are
   // implemented as separate functions since they each take a different number of arguments.
