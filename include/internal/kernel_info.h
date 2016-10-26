@@ -38,8 +38,6 @@
 #include <memory>
 #include <complex> // std::complex
 
-#include "internal/half.h"
-
 // Uses either the OpenCL or CUDA back-end (CLCudaAPI C++11 headers)
 #if USE_OPENCL
   #include "internal/clpp11.h"
@@ -48,6 +46,7 @@
 #endif
 
 #include "cltune.h"
+#include "internal/half.h" // host data-type for half-precision floating-point (16-bit)
 
 namespace cltune {
 // =================================================================================================
@@ -63,7 +62,7 @@ namespace cltune {
   using BufferRaw = CUdeviceptr;
 #endif
 
-// Enumeration of currently supported data-types by this class
+// Enumeration of currently supported data-types for device memory arguments
 enum class MemType { kShort, kInt, kSizeT, kHalf, kFloat, kDouble, kFloat2, kDouble2 };
 
 // See comment at top of file for a description of the class
@@ -198,47 +197,17 @@ class KernelInfo {
   // The result is stored as a member variable.
   void SetConfigurations();
 
-  void AddArgumentInput(const MemArgument &argument) {
-      arguments_input_.push_back(argument);
-      argument_counter_++;
-  }
-
-  void AddArgumentOutput(const MemArgument &argument) {
-      arguments_output_.push_back(argument);
-      argument_counter_++;
-  }
-
-  void AddArgumentScalar(const short argument) {
-      arguments_int_.push_back({ argument_counter_++, argument });
-  }
-
-  void AddArgumentScalar(const int argument) {
-      arguments_int_.push_back({ argument_counter_++, argument });
-  }
-
-  void AddArgumentScalar(const size_t argument) {
-      arguments_size_t_.push_back({ argument_counter_++, argument });
-  }
-
-  void AddArgumentScalar(const half argument) {
-      arguments_float_.push_back({ argument_counter_++, argument });
-  }
-
-  void AddArgumentScalar(const float argument) {
-      arguments_float_.push_back({ argument_counter_++, argument });
-  }
-
-  void AddArgumentScalar(const double argument) {
-      arguments_double_.push_back({ argument_counter_++, argument });
-  }
-
-  void AddArgumentScalar(const float2 argument) {
-      arguments_float2_.push_back({ argument_counter_++, argument });
-  }
-
-  void AddArgumentScalar(const double2 argument) {
-      arguments_double2_.push_back({ argument_counter_++, argument });
-  }
+  // Methods that add a new argument to a kernel.
+  void AddArgumentInput(const MemArgument &argument);
+  void AddArgumentOutput(const MemArgument &argument);
+  void AddArgumentScalar(const short argument);
+  void AddArgumentScalar(const int argument);
+  void AddArgumentScalar(const size_t argument);
+  void AddArgumentScalar(const half argument);
+  void AddArgumentScalar(const float argument);
+  void AddArgumentScalar(const double argument);
+  void AddArgumentScalar(const float2 argument);
+  void AddArgumentScalar(const double2 argument);
   
  private:
   // Called recursively internally by SetConfigurations 

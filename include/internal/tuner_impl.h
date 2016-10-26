@@ -41,9 +41,6 @@
 
 #include "internal/kernel_info.h"
 
-// Host data-type for half-precision floating-point (16-bit)
-#include "internal/half.h"
-
 #include <string> // std::string
 #include <vector> // std::vector
 #include <memory> // std::shared_ptr
@@ -149,8 +146,7 @@ class TunerImpl {
   VerificationTechnique verification_technique_;
   double tolerance_treshold_;
 
-  // Storage of kernel sources, arguments, and parameters
-  //size_t argument_counter_;
+  // Storage of kernels and output copy buffers
   std::vector<KernelInfo> kernels_;
   std::vector<KernelInfo::MemArgument> arguments_output_copy_; // these may be modified by the kernel
 

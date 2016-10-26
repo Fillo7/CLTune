@@ -261,4 +261,49 @@ inline bool KernelInfo::ValidConfiguration(const Configuration &config) {
 }
 
 // =================================================================================================
+
+// Methods that add a new argument to a kernel.
+void KernelInfo::AddArgumentInput(const MemArgument &argument) {
+  arguments_input_.push_back(argument);
+  argument_counter_++;
+}
+
+void KernelInfo::AddArgumentOutput(const MemArgument &argument) {
+  arguments_output_.push_back(argument);
+  argument_counter_++;
+}
+
+void KernelInfo::AddArgumentScalar(const short argument) {
+  arguments_int_.push_back({ argument_counter_++, argument });
+}
+
+void KernelInfo::AddArgumentScalar(const int argument) {
+  arguments_int_.push_back({ argument_counter_++, argument });
+}
+
+void KernelInfo::AddArgumentScalar(const size_t argument) {
+  arguments_size_t_.push_back({ argument_counter_++, argument });
+}
+
+void KernelInfo::AddArgumentScalar(const half argument) {
+  arguments_float_.push_back({ argument_counter_++, argument });
+}
+
+void KernelInfo::AddArgumentScalar(const float argument) {
+  arguments_float_.push_back({ argument_counter_++, argument });
+}
+
+void KernelInfo::AddArgumentScalar(const double argument) {
+  arguments_double_.push_back({ argument_counter_++, argument });
+}
+
+void KernelInfo::AddArgumentScalar(const float2 argument) {
+  arguments_float2_.push_back({ argument_counter_++, argument });
+}
+
+void KernelInfo::AddArgumentScalar(const double2 argument) {
+  arguments_double2_.push_back({ argument_counter_++, argument });
+}
+
+// =================================================================================================
 } // namespace cltune
