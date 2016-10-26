@@ -157,6 +157,7 @@ void KernelInfo::ComputeRanges(const Configuration &config) {
   local_ = local_values;
 }
 
+// Computes the number of iterations that kernel has to run based on the current configuration.
 void KernelInfo::SetNumCurrentIterations(const Configuration &config) {
   bool found_string = false;
   std::string modifier_string = iterations_.parameter_name;
@@ -262,7 +263,7 @@ inline bool KernelInfo::ValidConfiguration(const Configuration &config) {
 
 // =================================================================================================
 
-// Methods that add a new argument to a kernel.
+// Methods that add a new argument to the kernel.
 void KernelInfo::AddArgumentInput(const MemArgument &argument) {
   arguments_input_.push_back(argument);
   argument_counter_++;

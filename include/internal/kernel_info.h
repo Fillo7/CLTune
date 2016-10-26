@@ -197,7 +197,7 @@ class KernelInfo {
   // The result is stored as a member variable.
   void SetConfigurations();
 
-  // Methods that add a new argument to a kernel.
+  // Methods that add a new argument to the kernel.
   void AddArgumentInput(const MemArgument &argument);
   void AddArgumentOutput(const MemArgument &argument);
   void AddArgumentScalar(const short argument);

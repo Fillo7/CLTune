@@ -125,8 +125,6 @@ TunerImpl::~TunerImpl() {
       CheckError(cuMemFree(mem_info.buffer));
     #endif
   };
-  /*for (auto &mem_argument: arguments_input_) { free_buffers(mem_argument); }
-  for (auto &mem_argument: arguments_output_) { free_buffers(mem_argument); }*/
   for (auto &mem_argument: arguments_output_copy_) { free_buffers(mem_argument); }
 
   if (!suppress_output_) {
@@ -316,15 +314,15 @@ TunerImpl::TunerResult TunerImpl::RunKernel(const std::string &source, const Ker
       #endif
       auto tune_kernel = Kernel(program, kernel.name());
       
-      // If kernel runs over multiple iterations, buffer is split into smaller sections of equal
-      // size. Different section is used in each iteration. The buffer is split in different way
-      // based on whether OpenCL or CUDA is used.
-      #ifdef USE_OPENCL
-        if (kernel.num_current_iterations() == 1) {
-          for (auto &i : kernel.arguments_input()) { tune_kernel.SetArgument(i.index, i.buffer); }
-          for (auto &i : arguments_output_copy_) { tune_kernel.SetArgument(i.index, i.buffer); }
-        }
-        else {
+      if (kernel.num_current_iterations() == 1) {
+        for (auto &i : kernel.arguments_input()) { tune_kernel.SetArgument(i.index, i.buffer); }
+        for (auto &i : arguments_output_copy_) { tune_kernel.SetArgument(i.index, i.buffer); }
+      }
+      else {
+        // If kernel runs over multiple iterations, buffer is split into smaller sections of equal
+        // size. Different section is used in each iteration. The buffer is split in different way
+        // based on whether OpenCL or CUDA is used.
+        #ifdef USE_OPENCL
           for (auto &i : kernel.arguments_input()) {
             cl_buffer_region region;
             size_t memory_per_iteration = i.size * sizeof(i.type) / kernel.num_current_iterations();
@@ -341,13 +339,7 @@ TunerImpl::TunerResult TunerImpl::RunKernel(const std::string &source, const Ker
             tune_kernel.SetArgument(i.index, clCreateSubBuffer(i.buffer, CL_MEM_READ_WRITE,
                                               CL_BUFFER_CREATE_TYPE_REGION, &region, NULL));
           }
-        }
-      #else
-        if (kernel.num_iterations() == 1) {
-          for (auto &i : kernel.arguments_input()) { tune_kernel.SetArgument(i.index, i.buffer); }
-          for (auto &i : arguments_output_copy_) { tune_kernel.SetArgument(i.index, i.buffer); }
-        }
-        else {
+        #else
           // Warning: CUDA version of buffer split was NOT tested yet
           for (auto &i : kernel.arguments_input()) {
             size_t memory_per_iteration = i.size * sizeof(i.type) / kernel.num_current_iterations();
@@ -357,8 +349,8 @@ TunerImpl::TunerResult TunerImpl::RunKernel(const std::string &source, const Ker
             size_t memory_per_iteration = i.size * sizeof(i.type) / kernel.num_current_iterations();
             tune_kernel.SetArgument(i.index, i.buffer + memory_per_iteration * iteration);
           }
-        }
-      #endif
+        #endif
+      }
       for (auto &i : kernel.arguments_int()) { tune_kernel.SetArgument(i.first, i.second); }
       for (auto &i : kernel.arguments_size_t()) { tune_kernel.SetArgument(i.first, i.second); }
       for (auto &i : kernel.arguments_float()) { tune_kernel.SetArgument(i.first, i.second); }

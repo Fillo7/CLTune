@@ -178,6 +178,7 @@ void Tuner::SetLocalMemoryUsage(const size_t id, LocalMemoryFunction amount,
 // vector of data. Then, upload it to the device and store the argument in a list.
 template <typename T>
 void Tuner::AddArgumentInput(const size_t id, const std::vector<T> &source) {
+  if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
   auto device_buffer = Buffer<T>(pimpl->context(), BufferAccess::kNotOwned, source.size());
   device_buffer.Write(pimpl->queue(), source.size(), source);
   auto argument = KernelInfo::MemArgument{ pimpl->kernels_[id].argument_counter(), source.size(),
@@ -195,6 +196,7 @@ template void PUBLIC_API Tuner::AddArgumentInput<double>(const size_t id, const 
 template void PUBLIC_API Tuner::AddArgumentInput<float2>(const size_t id, const std::vector<float2>&);
 template void PUBLIC_API Tuner::AddArgumentInput<double2>(const size_t id, const std::vector<double2>&);
 
+// Same as above for reference kernel
 template <typename T>
 void Tuner::AddArgumentInputReference(const std::vector<T> &source) {
     auto device_buffer = Buffer<T>(pimpl->context(), BufferAccess::kNotOwned, source.size());
@@ -217,6 +219,7 @@ template void PUBLIC_API Tuner::AddArgumentInputReference<double2>(const std::ve
 // sense that they will be checked in the verification process.
 template <typename T>
 void Tuner::AddArgumentOutput(const size_t id, const std::vector<T> &source) {
+  if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
   auto device_buffer = Buffer<T>(pimpl->context(), BufferAccess::kNotOwned, source.size());
   device_buffer.Write(pimpl->queue(), source.size(), source);
   auto argument = KernelInfo::MemArgument{ pimpl->kernels_[id].argument_counter(), source.size(),
@@ -234,6 +237,7 @@ template void PUBLIC_API Tuner::AddArgumentOutput<double>(const size_t id, const
 template void PUBLIC_API Tuner::AddArgumentOutput<float2>(const size_t id, const std::vector<float2>&);
 template void PUBLIC_API Tuner::AddArgumentOutput<double2>(const size_t id, const std::vector<double2>&);
 
+// Same as above for reference kernel
 template <typename T>
 void Tuner::AddArgumentOutputReference(const std::vector<T> &source) {
     auto device_buffer = Buffer<T>(pimpl->context(), BufferAccess::kNotOwned, source.size());
@@ -243,7 +247,6 @@ void Tuner::AddArgumentOutputReference(const std::vector<T> &source) {
     pimpl->reference_kernel_->AddArgumentOutput(argument);
 }
 
-// Compiles the function for various data-types
 template void PUBLIC_API Tuner::AddArgumentOutputReference<short>(const std::vector<short>&);
 template void PUBLIC_API Tuner::AddArgumentOutputReference<int>(const std::vector<int>&);
 template void PUBLIC_API Tuner::AddArgumentOutputReference<size_t>(const std::vector<size_t>&);
@@ -257,30 +260,39 @@ template void PUBLIC_API Tuner::AddArgumentOutputReference<double2>(const std::v
 // exist, there is no general implemenation. Instead, each data-type has its specialised version in
 // which it stores to a specific vector.
 template <> void PUBLIC_API Tuner::AddArgumentScalar<short>(const size_t id, const short argument) {
+  if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
   pimpl->kernels_[id].AddArgumentScalar(argument);
 }
 template <> void PUBLIC_API Tuner::AddArgumentScalar<int>(const size_t id, const int argument) {
+  if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
   pimpl->kernels_[id].AddArgumentScalar(argument);
 }
 template <> void PUBLIC_API Tuner::AddArgumentScalar<size_t>(const size_t id, const size_t argument) {
+  if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
   pimpl->kernels_[id].AddArgumentScalar(argument);
 }
 template <> void PUBLIC_API Tuner::AddArgumentScalar<half>(const size_t id, const half argument) {
+  if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
   pimpl->kernels_[id].AddArgumentScalar(argument);
 }
 template <> void PUBLIC_API Tuner::AddArgumentScalar<float>(const size_t id, const float argument) {
+  if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
   pimpl->kernels_[id].AddArgumentScalar(argument);
 }
 template <> void PUBLIC_API Tuner::AddArgumentScalar<double>(const size_t id, const double argument) {
+  if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
   pimpl->kernels_[id].AddArgumentScalar(argument);
 }
 template <> void PUBLIC_API Tuner::AddArgumentScalar<float2>(const size_t id, const float2 argument) {
+  if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
   pimpl->kernels_[id].AddArgumentScalar(argument);
 }
 template <> void PUBLIC_API Tuner::AddArgumentScalar<double2>(const size_t id, const double2 argument) {
+  if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
   pimpl->kernels_[id].AddArgumentScalar(argument);
 }
 
+// Same as above for reference kernel
 template <> void PUBLIC_API Tuner::AddArgumentScalarReference<short>(const short argument) {
     pimpl->reference_kernel_->AddArgumentScalar(argument);
 }
