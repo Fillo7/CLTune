@@ -76,8 +76,7 @@ TunerImpl::TunerImpl():
     output_search_process_(false),
     search_log_filename_(std::string{}),
     search_method_(SearchMethod::FullSearch),
-    search_args_(0)
-    /*argument_counter_(0)*/ {
+    search_args_(0) {
   if (!suppress_output_) {
     fprintf(stdout, "\n%s Initializing on platform 0 device 0\n", kMessageFull.c_str());
     auto opencl_version = device_.Version();
@@ -101,8 +100,7 @@ TunerImpl::TunerImpl(size_t platform_id, size_t device_id):
     output_search_process_(false),
     search_log_filename_(std::string{}),
     search_method_(SearchMethod::FullSearch),
-    search_args_(0)
-    /*argument_counter_(0)*/ {
+    search_args_(0) {
   if (!suppress_output_) {
     fprintf(stdout, "\n%s Initializing on platform %zu device %zu\n",
             kMessageFull.c_str(), platform_id, device_id);

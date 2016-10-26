@@ -152,15 +152,7 @@ class TunerImpl {
   // Storage of kernel sources, arguments, and parameters
   //size_t argument_counter_;
   std::vector<KernelInfo> kernels_;
-  /*std::vector<MemArgument> arguments_input_;
-  std::vector<MemArgument> arguments_output_; // these remain constant*/
   std::vector<KernelInfo::MemArgument> arguments_output_copy_; // these may be modified by the kernel
-  /*std::vector<std::pair<size_t,int>> arguments_int_;
-  std::vector<std::pair<size_t,size_t>> arguments_size_t_;
-  std::vector<std::pair<size_t,float>> arguments_float_;
-  std::vector<std::pair<size_t,double>> arguments_double_;
-  std::vector<std::pair<size_t,float2>> arguments_float2_;
-  std::vector<std::pair<size_t,double2>> arguments_double2_;*/
 
   // Storage for the reference kernel and output
   std::unique_ptr<KernelInfo> reference_kernel_;

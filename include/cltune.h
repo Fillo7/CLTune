@@ -127,6 +127,11 @@ class Tuner {
   template <typename T> void AddArgumentOutput(const size_t id, const std::vector<T> &source);
   template <typename T> void AddArgumentScalar(const size_t id, const T argument);
 
+  // Same as above, but for reference kernel.
+  template <typename T> void AddArgumentInputReference(const std::vector<T> &source);
+  template <typename T> void AddArgumentOutputReference(const std::vector<T> &source);
+  template <typename T> void AddArgumentScalarReference(const T argument);
+
   // Configures a specific search method. The default search method is "FullSearch". These are
   // implemented as separate functions since they each take a different number of arguments.
   void PUBLIC_API UseFullSearch();
