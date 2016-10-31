@@ -377,8 +377,7 @@ void Tuner::Tune() {
 // =================================================================================================
 
 // Runs single kernel with given configuration and measures time.
-void Tuner::RunSingleKernel(const size_t id,
-                            const std::vector<std::pair<std::string, size_t>> &parameter_values) {
+void Tuner::RunSingleKernel(const size_t id, const ParameterRange &parameter_values) {
   if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
   pimpl->RunSingleKernel(id, parameter_values);
 }

@@ -52,6 +52,7 @@ class TunerImpl;
 // CLTune's custom data-types
 using IntRange = std::vector<size_t>;
 using StringRange = std::vector<std::string>;
+using ParameterRange = std::vector<std::pair<std::string, size_t>>;
 using ConstraintFunction = std::function<bool(std::vector<size_t>)>;
 using LocalMemoryFunction = std::function<size_t(std::vector<size_t>)>;
 
@@ -154,9 +155,8 @@ class Tuner {
   void PUBLIC_API Tune();
 
   // Runs specified kernel with given configuration, measures the running time and prints result to screen.
-  // Does not perform any tuning or output verification.
-  void PUBLIC_API RunSingleKernel(const size_t id,
-                                  const std::vector<std::pair<std::string, size_t>> &parameter_values);
+  // Does not perform any tuning.
+  void PUBLIC_API RunSingleKernel(const size_t id, const ParameterRange &parameter_values);
 
   // Trains a machine learning model based on the search space explored so far. Then, all the
   // missing data-points are estimated based on this model. This is only useful if a fraction of

@@ -433,8 +433,14 @@ TunerImpl::TunerResult TunerImpl::RunKernel(const std::string &source, const Ker
 // =================================================================================================
 
 // Wrapper for the above method, which can be called from public API.
-void TunerImpl::RunSingleKernel(const size_t id,
-    const std::vector<std::pair<std::string, size_t>> &parameter_values) {
+void TunerImpl::RunSingleKernel(const size_t id, const ParameterRange &parameter_values) {
+  // Runs the reference kernel if it is defined
+  if (has_reference_) {
+    PrintHeader("Testing reference " + reference_kernel_->name());
+    RunKernel(reference_kernel_->source(), *reference_kernel_, 0, 1);
+    StoreReferenceOutput();
+  }
+    
   KernelInfo kernel = kernels_[id];
   KernelInfo::Configuration configuration;
 
@@ -464,6 +470,7 @@ void TunerImpl::RunSingleKernel(const size_t id,
 
   // Compiles and runs the kernel
   auto tuning_result = RunKernel(kernel.source(), kernel, 0, 1);
+  tuning_result.status = VerifyOutput();
 
   if (parameter_values.size() > 0) {
     tuning_result.configuration = configuration;
@@ -471,7 +478,12 @@ void TunerImpl::RunSingleKernel(const size_t id,
 
   // Prints the result of the tuning
   PrintHeader("Printing kernel run result to stdout");
-  PrintResult(stdout, tuning_result, kMessageResult);
+  if (tuning_result.status) {
+    PrintResult(stdout, tuning_result, kMessageResult);
+  }
+  else {
+    PrintResult(stdout, tuning_result, kMessageWarning);
+  }
 }
 
 // =================================================================================================
