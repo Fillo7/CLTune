@@ -48,17 +48,30 @@
 namespace cltune {
 // =================================================================================================
 
-// Messages printed to stdout (in colours)
-const std::string TunerImpl::kMessageFull    = "\x1b[32m[==========]\x1b[0m";
-const std::string TunerImpl::kMessageHead    = "\x1b[32m[----------]\x1b[0m";
-const std::string TunerImpl::kMessageRun     = "\x1b[32m[ RUN      ]\x1b[0m";
-const std::string TunerImpl::kMessageInfo    = "\x1b[32m[   INFO   ]\x1b[0m";
-const std::string TunerImpl::kMessageVerbose = "\x1b[39m[ VERBOSE  ]\x1b[0m";
-const std::string TunerImpl::kMessageOK      = "\x1b[32m[       OK ]\x1b[0m";
-const std::string TunerImpl::kMessageWarning = "\x1b[33m[  WARNING ]\x1b[0m";
-const std::string TunerImpl::kMessageFailure = "\x1b[31m[   FAILED ]\x1b[0m";
-const std::string TunerImpl::kMessageResult  = "\x1b[32m[ RESULT   ]\x1b[0m";
-const std::string TunerImpl::kMessageBest    = "\x1b[35m[     BEST ]\x1b[0m";
+// Messages printed to stdout (in colours for Unix)
+#ifdef _WIN32
+  const std::string TunerImpl::kMessageFull = "[==========]";
+  const std::string TunerImpl::kMessageHead = "[----------]";
+  const std::string TunerImpl::kMessageRun = "[ RUN      ]";
+  const std::string TunerImpl::kMessageInfo = "[   INFO   ]";
+  const std::string TunerImpl::kMessageVerbose = "[ VERBOSE  ]";
+  const std::string TunerImpl::kMessageOK = "[       OK ]";
+  const std::string TunerImpl::kMessageWarning = "[  WARNING ]";
+  const std::string TunerImpl::kMessageFailure = "[   FAILED ]";
+  const std::string TunerImpl::kMessageResult = "[ RESULT   ]";
+  const std::string TunerImpl::kMessageBest = "[     BEST ]";
+#else
+  const std::string TunerImpl::kMessageFull = "\x1b[32m[==========]\x1b[0m";
+  const std::string TunerImpl::kMessageHead = "\x1b[32m[----------]\x1b[0m";
+  const std::string TunerImpl::kMessageRun = "\x1b[32m[ RUN      ]\x1b[0m";
+  const std::string TunerImpl::kMessageInfo = "\x1b[32m[   INFO   ]\x1b[0m";
+  const std::string TunerImpl::kMessageVerbose = "\x1b[39m[ VERBOSE  ]\x1b[0m";
+  const std::string TunerImpl::kMessageOK = "\x1b[32m[       OK ]\x1b[0m";
+  const std::string TunerImpl::kMessageWarning = "\x1b[33m[  WARNING ]\x1b[0m";
+  const std::string TunerImpl::kMessageFailure = "\x1b[31m[   FAILED ]\x1b[0m";
+  const std::string TunerImpl::kMessageResult = "\x1b[32m[ RESULT   ]\x1b[0m";
+  const std::string TunerImpl::kMessageBest = "\x1b[35m[     BEST ]\x1b[0m";
+#endif
   
 // =================================================================================================
 
@@ -415,6 +428,50 @@ TunerImpl::TunerResult TunerImpl::RunKernel(const std::string &source, const Ker
     TunerResult result = {kernel.name(), std::numeric_limits<float>::max(), 0, false, {}};
     return result;
   }
+}
+
+// =================================================================================================
+
+// Wrapper for the above method, which can be called from public API.
+void TunerImpl::RunSingleKernel(const size_t id,
+    const std::vector<std::pair<std::string, size_t>> &parameter_values) {
+  KernelInfo kernel = kernels_[id];
+  KernelInfo::Configuration configuration;
+
+  PrintHeader("Running kernel " + kernel.name());
+
+  if (parameter_values.size() > 0) {
+    for (auto &parameter : parameter_values) {
+      KernelInfo::Setting setting;
+      setting.name = parameter.first;
+      setting.value = parameter.second;
+      configuration.push_back(setting);
+    }
+
+    // Adds the parameters to the source-code string as defines
+    auto source = std::string{};
+    for (auto &config : configuration) {
+          source += config.GetDefine();
+    }
+    source += kernel.source();
+
+    // Updates the local range with the parameter values
+    kernel.ComputeRanges(configuration);
+
+    // Updates number of kernel iterations based on parameter value
+    kernel.SetNumCurrentIterations(configuration);
+  }
+
+  // Compiles and runs the kernel
+  auto tuning_result = RunKernel(kernel.source(), kernel, 0, 1);
+
+  if (parameter_values.size() > 0) {
+    tuning_result.configuration = configuration;
+  }
+
+  // Prints the result of the tuning
+  PrintHeader("Printing kernel run result to stdout");
+  PrintResult(stdout, tuning_result, kMessageResult);
 }
 
 // =================================================================================================

@@ -153,6 +153,11 @@ class Tuner {
   // parameters. Note that this might take a while.
   void PUBLIC_API Tune();
 
+  // Runs specified kernel with given configuration, measures the running time and prints result to screen.
+  // Does not perform any tuning or output verification.
+  void PUBLIC_API RunSingleKernel(const size_t id,
+                                  const std::vector<std::pair<std::string, size_t>> &parameter_values);
+
   // Trains a machine learning model based on the search space explored so far. Then, all the
   // missing data-points are estimated based on this model. This is only useful if a fraction of
   // the search space is explored, as is the case when doing random-search.

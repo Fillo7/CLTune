@@ -91,6 +91,10 @@ class TunerImpl {
   TunerResult RunKernel(const std::string &source, const KernelInfo &kernel,
                         const size_t configuration_id, const size_t num_configurations);
 
+  // Wrapper for the above method, which can be called from public API.
+  void RunSingleKernel(const size_t id,
+                       const std::vector<std::pair<std::string, size_t>> &parameter_values);
+
   // Copies an output buffer
   template <typename T> KernelInfo::MemArgument CopyOutputBuffer(KernelInfo::MemArgument &argument);
 

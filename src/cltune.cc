@@ -376,6 +376,15 @@ void Tuner::Tune() {
 
 // =================================================================================================
 
+// Runs single kernel with given configuration and measures time.
+void Tuner::RunSingleKernel(const size_t id,
+                            const std::vector<std::pair<std::string, size_t>> &parameter_values) {
+  if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
+  pimpl->RunSingleKernel(id, parameter_values);
+}
+
+// =================================================================================================
+
 // Fits a machine learning model. See the TunerImpl's implemenation for details
 void Tuner::ModelPrediction(const Model model_type, const float validation_fraction,
                             const size_t test_top_x_configurations) {
