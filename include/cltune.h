@@ -52,6 +52,7 @@ class TunerImpl;
 // CLTune's custom data-types
 using IntRange = std::vector<size_t>;
 using StringRange = std::vector<std::string>;
+using ParameterRange = std::vector<std::pair<std::string, size_t>>;
 using ConstraintFunction = std::function<bool(std::vector<size_t>)>;
 using LocalMemoryFunction = std::function<size_t(std::vector<size_t>)>;
 
@@ -123,9 +124,14 @@ class Tuner {
 
   // Functions to add kernel-arguments for input buffers, output buffers, and scalars. Make sure to
   // call these in the order in which the arguments appear in the kernel.
-  template <typename T> void AddArgumentInput(const std::vector<T> &source);
-  template <typename T> void AddArgumentOutput(const std::vector<T> &source);
-  template <typename T> void AddArgumentScalar(const T argument);
+  template <typename T> void AddArgumentInput(const size_t id, const std::vector<T> &source);
+  template <typename T> void AddArgumentOutput(const size_t id, const std::vector<T> &source);
+  template <typename T> void AddArgumentScalar(const size_t id, const T argument);
+
+  // Same as above, but for reference kernel.
+  template <typename T> void AddArgumentInputReference(const std::vector<T> &source);
+  template <typename T> void AddArgumentOutputReference(const std::vector<T> &source);
+  template <typename T> void AddArgumentScalarReference(const T argument);
 
   // Configures a specific search method. The default search method is "FullSearch". These are
   // implemented as separate functions since they each take a different number of arguments.
@@ -147,6 +153,10 @@ class Tuner {
   // Starts the tuning process: compile all kernels and run them for each permutation of the tuning-
   // parameters. Note that this might take a while.
   void PUBLIC_API Tune();
+
+  // Runs specified kernel with given configuration, measures the running time and prints result to screen.
+  // Does not perform any tuning.
+  void PUBLIC_API RunSingleKernel(const size_t id, const ParameterRange &parameter_values);
 
   // Trains a machine learning model based on the search space explored so far. Then, all the
   // missing data-points are estimated based on this model. This is only useful if a fraction of

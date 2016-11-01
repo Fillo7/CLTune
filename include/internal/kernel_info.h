@@ -36,6 +36,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <memory>
+#include <complex> // std::complex
 
 // Uses either the OpenCL or CUDA back-end (CLCudaAPI C++11 headers)
 #if USE_OPENCL
@@ -45,9 +46,24 @@
 #endif
 
 #include "cltune.h"
+#include "internal/half.h" // host data-type for half-precision floating-point (16-bit)
 
 namespace cltune {
 // =================================================================================================
+
+// Shorthands for complex data-types
+  using float2 = std::complex<float>; // cl_float2;
+  using double2 = std::complex<double>; // cl_double2;
+
+// Raw device buffer
+#if USE_OPENCL
+  using BufferRaw = cl_mem;
+#else
+  using BufferRaw = CUdeviceptr;
+#endif
+
+// Enumeration of currently supported data-types for device memory arguments
+enum class MemType { kShort, kInt, kSizeT, kHalf, kFloat, kDouble, kFloat2, kDouble2 };
 
 // See comment at top of file for a description of the class
 class KernelInfo {
@@ -60,6 +76,14 @@ class KernelInfo {
   struct Parameter {
     std::string name;
     std::vector<size_t> values;
+  };
+
+  // Helper structure to store a device memory argument for a kernel
+  struct MemArgument {
+    size_t index;       // The kernel-argument index
+    size_t size;        // The number of elements (not bytes)
+    MemType type;       // The data-type (e.g. float)
+    BufferRaw buffer;   // The buffer on the device
   };
 
   // Helper structure holding a setting: a name and a value. Multiple settings combined make a
@@ -107,6 +131,7 @@ class KernelInfo {
 
   // Initializes the class with a given name and a string of kernel source-code
   explicit KernelInfo(const std::string name, const std::string source, const Device &device);
+  ~KernelInfo();
 
   // Accessors (getters)
   std::string name() const { return name_; }
@@ -119,6 +144,15 @@ class KernelInfo {
   IntRange global() const { return global_; }
   IntRange local() const { return local_; }
   std::vector<Configuration> configurations() { return configurations_; }
+  size_t argument_counter() const { return argument_counter_; }
+  std::vector<MemArgument> arguments_input() const { return arguments_input_; }
+  std::vector<MemArgument> arguments_output() const { return arguments_output_; }
+  std::vector<std::pair<size_t, int>> arguments_int() const { return arguments_int_; }
+  std::vector<std::pair<size_t, size_t>> arguments_size_t() const { return arguments_size_t_; }
+  std::vector<std::pair<size_t, float>> arguments_float() const { return arguments_float_; }
+  std::vector<std::pair<size_t, double>> arguments_double() const { return arguments_double_; }
+  std::vector<std::pair<size_t, float2>> arguments_float2() const { return arguments_float2_; }
+  std::vector<std::pair<size_t, double2>> arguments_double2() const { return arguments_double2_; }
 
   // Accessors (setters) - Note that these also pre-set the final global/local size
   void set_global_base(IntRange global) { global_base_ = global; global_ = global; }
@@ -162,6 +196,18 @@ class KernelInfo {
   // Computes all permutations based on the parameters and their values (the configuration list).
   // The result is stored as a member variable.
   void SetConfigurations();
+
+  // Methods that add a new argument to the kernel.
+  void AddArgumentInput(const MemArgument &argument);
+  void AddArgumentOutput(const MemArgument &argument);
+  void AddArgumentScalar(const short argument);
+  void AddArgumentScalar(const int argument);
+  void AddArgumentScalar(const size_t argument);
+  void AddArgumentScalar(const half argument);
+  void AddArgumentScalar(const float argument);
+  void AddArgumentScalar(const double argument);
+  void AddArgumentScalar(const float2 argument);
+  void AddArgumentScalar(const double2 argument);
   
  private:
   // Called recursively internally by SetConfigurations 
@@ -188,6 +234,17 @@ class KernelInfo {
   IntRange local_base_;
   IntRange global_;
   IntRange local_;
+
+  // Storage of kernel arguments
+  size_t argument_counter_;
+  std::vector<MemArgument> arguments_input_;
+  std::vector<MemArgument> arguments_output_;
+  std::vector<std::pair<size_t, int>> arguments_int_;
+  std::vector<std::pair<size_t, size_t>> arguments_size_t_;
+  std::vector<std::pair<size_t, float>> arguments_float_;
+  std::vector<std::pair<size_t, double>> arguments_double_;
+  std::vector<std::pair<size_t, float2>> arguments_float2_;
+  std::vector<std::pair<size_t, double2>> arguments_double2_;
 
   // Multipliers and dividers for global/local thread-sizes
   std::vector<ThreadSizeModifier> thread_size_modifiers_;

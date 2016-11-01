@@ -47,7 +47,21 @@ KernelInfo::KernelInfo(const std::string name, const std::string source, const D
   global_(), local_(),
   iterations_(IterationsModifier{ std::vector<size_t>{1}, std::string{""} }),
   num_current_iterations_(1),
+  argument_counter_(0),
   thread_size_modifiers_() {
+}
+
+KernelInfo::~KernelInfo() {
+  // Frees the device buffers
+  auto free_buffers = [](MemArgument &mem_info) {
+  #ifdef USE_OPENCL
+    CheckError(clReleaseMemObject(mem_info.buffer));
+  #else
+    CheckError(cuMemFree(mem_info.buffer));
+  #endif
+  };
+  for (auto &mem_argument : arguments_input_) { free_buffers(mem_argument); }
+  for (auto &mem_argument : arguments_output_) { free_buffers(mem_argument); }
 }
 
 // =================================================================================================
@@ -143,6 +157,7 @@ void KernelInfo::ComputeRanges(const Configuration &config) {
   local_ = local_values;
 }
 
+// Computes the number of iterations that kernel has to run based on the current configuration.
 void KernelInfo::SetNumCurrentIterations(const Configuration &config) {
   bool found_string = false;
   std::string modifier_string = iterations_.parameter_name;
@@ -244,6 +259,51 @@ inline bool KernelInfo::ValidConfiguration(const Configuration &config) {
 
   // Everything was OK: this configuration is valid
   return true;
+}
+
+// =================================================================================================
+
+// Methods that add a new argument to the kernel.
+void KernelInfo::AddArgumentInput(const MemArgument &argument) {
+  arguments_input_.push_back(argument);
+  argument_counter_++;
+}
+
+void KernelInfo::AddArgumentOutput(const MemArgument &argument) {
+  arguments_output_.push_back(argument);
+  argument_counter_++;
+}
+
+void KernelInfo::AddArgumentScalar(const short argument) {
+  arguments_int_.push_back({ argument_counter_++, argument });
+}
+
+void KernelInfo::AddArgumentScalar(const int argument) {
+  arguments_int_.push_back({ argument_counter_++, argument });
+}
+
+void KernelInfo::AddArgumentScalar(const size_t argument) {
+  arguments_size_t_.push_back({ argument_counter_++, argument });
+}
+
+void KernelInfo::AddArgumentScalar(const half argument) {
+  arguments_float_.push_back({ argument_counter_++, argument });
+}
+
+void KernelInfo::AddArgumentScalar(const float argument) {
+  arguments_float_.push_back({ argument_counter_++, argument });
+}
+
+void KernelInfo::AddArgumentScalar(const double argument) {
+  arguments_double_.push_back({ argument_counter_++, argument });
+}
+
+void KernelInfo::AddArgumentScalar(const float2 argument) {
+  arguments_float2_.push_back({ argument_counter_++, argument });
+}
+
+void KernelInfo::AddArgumentScalar(const double2 argument) {
+  arguments_double2_.push_back({ argument_counter_++, argument });
 }
 
 // =================================================================================================
