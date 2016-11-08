@@ -152,11 +152,11 @@ class Tuner {
 
   // Starts the tuning process: compile all kernels and run them for each permutation of the tuning-
   // parameters. Note that this might take a while.
-  void PUBLIC_API Tune();
+  float PUBLIC_API Tune();
 
   // Runs specified kernel with given configuration, measures the running time and prints result to screen.
   // Does not perform any tuning.
-  void PUBLIC_API RunSingleKernel(const size_t id, const ParameterRange &parameter_values);
+  float PUBLIC_API RunSingleKernel(const size_t id, const ParameterRange &parameter_values);
 
   // Trains a machine learning model based on the search space explored so far. Then, all the
   // missing data-points are estimated based on this model. This is only useful if a fraction of

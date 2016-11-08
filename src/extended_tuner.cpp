@@ -18,19 +18,19 @@ namespace cltune
         auto beforeTuningBegin = std::chrono::high_resolution_clock::now();
         configurator->beforeTuning();
         auto beforeTuningEnd = std::chrono::high_resolution_clock::now();
-        auto beforeDuration = std::chrono::duration_cast<std::chrono::nanoseconds>(beforeTuningEnd - beforeTuningBegin).count();
+        auto beforeDuration = std::chrono::duration_cast<std::chrono::microseconds>(beforeTuningEnd - beforeTuningBegin).count();
 
-        basicTuner->RunSingleKernel(id, parameter_values);
+        float kernelDuration = basicTuner->RunSingleKernel(id, parameter_values);
 
         auto afterTuningBegin = std::chrono::high_resolution_clock::now();
         configurator->afterTuning();
         auto afterTuningEnd = std::chrono::high_resolution_clock::now();
-        auto afterDuration = std::chrono::duration_cast<std::chrono::nanoseconds>(afterTuningEnd - afterTuningBegin).count();
+        auto afterDuration = std::chrono::duration_cast<std::chrono::microseconds>(afterTuningEnd - afterTuningBegin).count();
 
-        std::cout << "Duration of beforeTuning() method: " << beforeDuration << "ns." << std::endl;
-        std::cout << "Duration of kernel execution: " << "<to do>" << "ns." << std::endl;
-        std::cout << "Duration of afterTuning() method: " << afterDuration << "ns." << std::endl;
-        std::cout << "Total duration: " << beforeDuration + afterDuration /* + kernel execution time */ << "ns." << std::endl;
+        std::cout << "Duration of beforeTuning() method: " << beforeDuration << "ms." << std::endl;
+        std::cout << "Duration of kernel execution: " << kernelDuration << "ms." << std::endl;
+        std::cout << "Duration of afterTuning() method: " << afterDuration << "ms." << std::endl;
+        std::cout << "Total duration: " << beforeDuration + afterDuration + kernelDuration << "ms." << std::endl;
     }
 
     void ExtendedTuner::tune()
@@ -38,18 +38,18 @@ namespace cltune
         auto beforeTuningBegin = std::chrono::high_resolution_clock::now();
         configurator->beforeTuning();
         auto beforeTuningEnd = std::chrono::high_resolution_clock::now();
-        auto beforeDuration = std::chrono::duration_cast<std::chrono::nanoseconds>(beforeTuningEnd - beforeTuningBegin).count();
+        auto beforeDuration = std::chrono::duration_cast<std::chrono::microseconds>(beforeTuningEnd - beforeTuningBegin).count();
 
-        basicTuner->Tune();
+        float bestKernelDuration = basicTuner->Tune();
 
         auto afterTuningBegin = std::chrono::high_resolution_clock::now();
         configurator->afterTuning();
         auto afterTuningEnd = std::chrono::high_resolution_clock::now();
-        auto afterDuration = std::chrono::duration_cast<std::chrono::nanoseconds>(afterTuningEnd - afterTuningBegin).count();
+        auto afterDuration = std::chrono::duration_cast<std::chrono::microseconds>(afterTuningEnd - afterTuningBegin).count();
 
-        std::cout << "Duration of beforeTuning() method: " << beforeDuration << "ns." << std::endl;
-        std::cout << "Duration of fastest kernel execution: " << "<to do>" << "ns." << std::endl;
-        std::cout << "Duration of afterTuning() method: " << afterDuration << "ns." << std::endl;
-        std::cout << "Total duration: " << beforeDuration + afterDuration /* + fastest kernel execution time */ << "ns." << std::endl;
+        std::cout << "Duration of beforeTuning() method: " << beforeDuration << "ms." << std::endl;
+        std::cout << "Duration of fastest kernel execution: " << bestKernelDuration << "ms." << std::endl;
+        std::cout << "Duration of afterTuning() method: " << afterDuration << "ms." << std::endl;
+        std::cout << "Total duration: " << beforeDuration + afterDuration + bestKernelDuration << "ms." << std::endl;
     }
 } // namespace cltune
