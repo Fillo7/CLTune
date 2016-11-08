@@ -2,9 +2,10 @@
 #define CLTUNE_EXTENDED_TUNER_H_
 
 #include "cltune.h"
+#include "tuner_configurator.h"
 
-// Exports library functions under Windows when building a DLL. See also:
-// https://msdn.microsoft.com/en-us/library/a90k134d.aspx
+// Exports library functions under Windows when building a DLL.
+// See also: https://msdn.microsoft.com/en-us/library/a90k134d.aspx
 #ifdef _WIN32
 #define PUBLIC_API __declspec(dllexport)
 #else
@@ -14,16 +15,27 @@
 namespace cltune
 {
 
+using UniqueTuner = std::unique_ptr<Tuner>;
+using UniqueConfigurator = std::unique_ptr<TunerConfigurator>;
+
 class ExtendedTuner
 {
 public:
-    // Initializes the extended tuner either with platform 0 and device 0 or with a custom platform/device
-    explicit PUBLIC_API ExtendedTuner();
-    explicit PUBLIC_API ExtendedTuner(size_t platform_id, size_t device_id);
-    ~ExtendedTuner();
+    // Initializes the extended tuner by providing basic tuner (with already set arguments, parameters, etc.) and its configurator
+    explicit PUBLIC_API ExtendedTuner(UniqueTuner basicTuner, UniqueConfigurator configurator);
+    
+    // Extended tuner destructor
+    PUBLIC_API ~ExtendedTuner();
+
+    // Runs single kernel using the specified configurator
+    PUBLIC_API void runSingleKernel(const size_t id, const ParameterRange &parameter_values);
+
+    // Starts tuning process using the specified configurator
+    PUBLIC_API void tune();
 
 private:
     std::unique_ptr<Tuner> basicTuner;
+    std::unique_ptr<TunerConfigurator> configurator;
 };
 
 } // namespace cltune
