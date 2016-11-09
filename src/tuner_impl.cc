@@ -245,6 +245,10 @@ float TunerImpl::Tune() {
           PrintResult(stdout, tuning_result, kMessageWarning);
         }
         tuning_results_.push_back(tuning_result);
+
+        if (bestExecutionTime > tuning_result.time) {
+            bestExecutionTime = tuning_result.time;
+        }
       }
 
       // Prints a log of the searching process. This is disabled per default, but can be enabled
