@@ -1,6 +1,8 @@
 #ifndef CLTUNE_EXTENDED_TUNER_H_
 #define CLTUNE_EXTENDED_TUNER_H_
 
+#include <memory>
+
 #include "cltune.h"
 #include "tuner_configurator.h"
 
@@ -21,21 +23,21 @@ using UniqueConfigurator = std::unique_ptr<TunerConfigurator>;
 class ExtendedTuner
 {
 public:
-    // Initializes the extended tuner by providing basic tuner (with already set arguments, parameters, etc.) and its configurator
+    // Initializes the extended tuner by providing basic tuner (with already set arguments, parameters, etc.) and its configurator.
     explicit PUBLIC_API ExtendedTuner(UniqueTuner basicTuner, UniqueConfigurator configurator);
     
-    // Extended tuner destructor
+    // Extended tuner destructor.
     PUBLIC_API ~ExtendedTuner();
 
-    // Runs single kernel using the specified configurator
+    // Runs single kernel using the provided configurator.
     PUBLIC_API void runSingleKernel(const size_t id, const ParameterRange &parameter_values);
 
-    // Starts tuning process using the specified configurator
+    // Starts tuning process using the provided configurator.
     PUBLIC_API void tune();
 
 private:
-    std::unique_ptr<Tuner> basicTuner;
-    std::unique_ptr<TunerConfigurator> configurator;
+    UniqueTuner basicTuner;
+    UniqueConfigurator configurator;
 };
 
 } // namespace cltune

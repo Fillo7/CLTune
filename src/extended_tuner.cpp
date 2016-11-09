@@ -1,6 +1,8 @@
 #include <chrono>
 #include <iostream>
+#include <memory>
 #include <utility>
+
 #include "extended_tuner.h"
 
 namespace cltune
@@ -28,10 +30,10 @@ namespace cltune
         auto afterTuningEnd = std::chrono::high_resolution_clock::now();
         auto afterDuration = std::chrono::duration_cast<std::chrono::milliseconds>(afterTuningEnd - afterTuningBegin).count();
 
-        std::cout << "Duration of beforeTuning() method: " << beforeDuration << "ms." << std::endl;
-        std::cout << "Duration of kernel execution: " << kernelDuration << "ms." << std::endl;
-        std::cout << "Duration of afterTuning() method: " << afterDuration << "ms." << std::endl;
-        std::cout << "Total duration: " << beforeDuration + afterDuration + kernelDuration << "ms." << std::endl;
+        std::cout << "[Extended Tuner]" << "Duration of beforeTuning() method: " << beforeDuration << "ms." << std::endl;
+        std::cout << "[Extended Tuner]" << "Duration of kernel execution: " << kernelDuration << "ms." << std::endl;
+        std::cout << "[Extended Tuner]" << "Duration of afterTuning() method: " << afterDuration << "ms." << std::endl;
+        std::cout << "[Extended Tuner]" << "Total duration: " << beforeDuration + afterDuration + kernelDuration << "ms." << std::endl;
     }
 
     void ExtendedTuner::tune()
@@ -48,10 +50,10 @@ namespace cltune
         auto afterTuningEnd = std::chrono::high_resolution_clock::now();
         auto afterDuration = std::chrono::duration_cast<std::chrono::milliseconds>(afterTuningEnd - afterTuningBegin).count();
 
-        std::cout << "Duration of beforeTuning() method: " << beforeDuration << "ms." << std::endl;
-        std::cout << "Duration of fastest kernel execution: " << bestKernelDuration << "ms." << std::endl;
-        std::cout << "Duration of afterTuning() method: " << afterDuration << "ms." << std::endl;
-        std::cout << "Total duration: " << beforeDuration + afterDuration + bestKernelDuration << "ms." << std::endl;
+        std::cout << "[Extended Tuner]" << "Duration of beforeTuning() method: " << beforeDuration << "ms." << std::endl;
+        std::cout << "[Extended Tuner]" << "Duration of fastest kernel execution: " << bestKernelDuration << "ms." << std::endl;
+        std::cout << "[Extended Tuner]" << "Duration of afterTuning() method: " << afterDuration << "ms." << std::endl;
+        std::cout << "[Extended Tuner]" << "Total duration: " << beforeDuration + afterDuration + bestKernelDuration << "ms." << std::endl;
     }
 
 } // namespace cltune
