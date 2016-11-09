@@ -1,12 +1,17 @@
 #include <chrono>
+#include <complex>
 #include <iostream>
 #include <memory>
 #include <utility>
 
+#include "CL/cl.h"
 #include "extended_tuner.h"
 
 namespace cltune
 {
+    using half = cl_half;
+    using float2 = std::complex<float>;
+    using double2 = std::complex<double>;
 
     ExtendedTuner::ExtendedTuner(size_t platformId, size_t deviceId, UniqueConfigurator configurator):
         basicTuner(new Tuner(platformId, deviceId))
@@ -90,29 +95,84 @@ namespace cltune
         basicTuner->AddArgumentInput(id, source);
     }
 
+    template void PUBLIC_API ExtendedTuner::addArgumentInput<short>(const size_t id, const std::vector<short>&);
+    template void PUBLIC_API ExtendedTuner::addArgumentInput<int>(const size_t id, const std::vector<int>&);
+    template void PUBLIC_API ExtendedTuner::addArgumentInput<size_t>(const size_t id, const std::vector<size_t>&);
+    template void PUBLIC_API ExtendedTuner::addArgumentInput<half>(const size_t id, const std::vector<half>&);
+    template void PUBLIC_API ExtendedTuner::addArgumentInput<float>(const size_t id, const std::vector<float>&);
+    template void PUBLIC_API ExtendedTuner::addArgumentInput<double>(const size_t id, const std::vector<double>&);
+    template void PUBLIC_API ExtendedTuner::addArgumentInput<float2>(const size_t id, const std::vector<float2>&);
+    template void PUBLIC_API ExtendedTuner::addArgumentInput<double2>(const size_t id, const std::vector<double2>&);
+
     template <typename T> void ExtendedTuner::addArgumentOutput(const size_t id, const std::vector<T> &source)
     {
         basicTuner->AddArgumentOutput(id, source);
     }
+
+    template void PUBLIC_API ExtendedTuner::addArgumentOutput<short>(const size_t id, const std::vector<short>&);
+    template void PUBLIC_API ExtendedTuner::addArgumentOutput<int>(const size_t id, const std::vector<int>&);
+    template void PUBLIC_API ExtendedTuner::addArgumentOutput<size_t>(const size_t id, const std::vector<size_t>&);
+    template void PUBLIC_API ExtendedTuner::addArgumentOutput<half>(const size_t id, const std::vector<half>&);
+    template void PUBLIC_API ExtendedTuner::addArgumentOutput<float>(const size_t id, const std::vector<float>&);
+    template void PUBLIC_API ExtendedTuner::addArgumentOutput<double>(const size_t id, const std::vector<double>&);
+    template void PUBLIC_API ExtendedTuner::addArgumentOutput<float2>(const size_t id, const std::vector<float2>&);
+    template void PUBLIC_API ExtendedTuner::addArgumentOutput<double2>(const size_t id, const std::vector<double2>&);
 
     template <typename T> void ExtendedTuner::addArgumentScalar(const size_t id, const T argument)
     {
         basicTuner->AddArgumentScalar(id, argument);
     }
 
+    template void PUBLIC_API ExtendedTuner::addArgumentScalar<short>(const size_t id, const short argument);
+    template void PUBLIC_API ExtendedTuner::addArgumentScalar<int>(const size_t id, const int argument);
+    template void PUBLIC_API ExtendedTuner::addArgumentScalar<size_t>(const size_t id, const size_t argument);
+    template void PUBLIC_API ExtendedTuner::addArgumentScalar<half>(const size_t id, const half argument);
+    template void PUBLIC_API ExtendedTuner::addArgumentScalar<float>(const size_t id, const float argument);
+    template void PUBLIC_API ExtendedTuner::addArgumentScalar<double>(const size_t id, const double argument);
+    template void PUBLIC_API ExtendedTuner::addArgumentScalar<float2>(const size_t id, const float2 argument);
+    template void PUBLIC_API ExtendedTuner::addArgumentScalar<double2>(const size_t id, const double2 argument);
+
     template <typename T> void ExtendedTuner::addArgumentInputReference(const std::vector<T>& source)
     {
         basicTuner->AddArgumentInputReference(source);
     }
 
+    template void PUBLIC_API ExtendedTuner::addArgumentInputReference<short>(const std::vector<short>&);
+    template void PUBLIC_API ExtendedTuner::addArgumentInputReference<int>(const std::vector<int>&);
+    template void PUBLIC_API ExtendedTuner::addArgumentInputReference<size_t>(const std::vector<size_t>&);
+    template void PUBLIC_API ExtendedTuner::addArgumentInputReference<half>(const std::vector<half>&);
+    template void PUBLIC_API ExtendedTuner::addArgumentInputReference<float>(const std::vector<float>&);
+    template void PUBLIC_API ExtendedTuner::addArgumentInputReference<double>(const std::vector<double>&);
+    template void PUBLIC_API ExtendedTuner::addArgumentInputReference<float2>(const std::vector<float2>&);
+    template void PUBLIC_API ExtendedTuner::addArgumentInputReference<double2>(const std::vector<double2>&);
+
     template <typename T> void ExtendedTuner::addArgumentOutputReference(const std::vector<T>& source)
     {
         basicTuner->AddArgumentOutputReference(source);
     }
+
+    template void PUBLIC_API ExtendedTuner::addArgumentOutputReference<short>(const std::vector<short>&);
+    template void PUBLIC_API ExtendedTuner::addArgumentOutputReference<int>(const std::vector<int>&);
+    template void PUBLIC_API ExtendedTuner::addArgumentOutputReference<size_t>(const std::vector<size_t>&);
+    template void PUBLIC_API ExtendedTuner::addArgumentOutputReference<half>(const std::vector<half>&);
+    template void PUBLIC_API ExtendedTuner::addArgumentOutputReference<float>(const std::vector<float>&);
+    template void PUBLIC_API ExtendedTuner::addArgumentOutputReference<double>(const std::vector<double>&);
+    template void PUBLIC_API ExtendedTuner::addArgumentOutputReference<float2>(const std::vector<float2>&);
+    template void PUBLIC_API ExtendedTuner::addArgumentOutputReference<double2>(const std::vector<double2>&);
+
     template <typename T> void ExtendedTuner::addArgumentScalarReference(const T argument)
     {
         basicTuner->AddArgumentScalarReference(argument);
     }
+
+    template void PUBLIC_API ExtendedTuner::addArgumentScalarReference<short>(const short argument);
+    template void PUBLIC_API ExtendedTuner::addArgumentScalarReference<int>(const int argument);
+    template void PUBLIC_API ExtendedTuner::addArgumentScalarReference<size_t>(const size_t argument);
+    template void PUBLIC_API ExtendedTuner::addArgumentScalarReference<half>(const half argument);
+    template void PUBLIC_API ExtendedTuner::addArgumentScalarReference<float>(const float argument);
+    template void PUBLIC_API ExtendedTuner::addArgumentScalarReference<double>(const double argument);
+    template void PUBLIC_API ExtendedTuner::addArgumentScalarReference<float2>(const float2 argument);
+    template void PUBLIC_API ExtendedTuner::addArgumentScalarReference<double2>(const double2 argument);
 
     void ExtendedTuner::useFullSearch()
     {
