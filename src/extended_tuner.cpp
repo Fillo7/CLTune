@@ -13,11 +13,9 @@ namespace cltune
     using float2 = std::complex<float>;
     using double2 = std::complex<double>;
 
-    ExtendedTuner::ExtendedTuner(size_t platformId, size_t deviceId, UniqueConfigurator configurator):
+    ExtendedTuner::ExtendedTuner(size_t platformId, size_t deviceId):
         basicTuner(new Tuner(platformId, deviceId))
-    {
-        this->configurator = std::move(configurator);
-    } 
+    {}
 
     ExtendedTuner::~ExtendedTuner() {}
 
@@ -273,6 +271,11 @@ namespace cltune
         std::cout << "[Extended Tuner]" << "Duration of fastest kernel execution: " << bestKernelDuration << "ms." << std::endl;
         std::cout << "[Extended Tuner]" << "Duration of afterTuning() method: " << afterDuration << "ms." << std::endl;
         std::cout << "[Extended Tuner]" << "Total duration: " << beforeDuration + afterDuration + bestKernelDuration << "ms." << std::endl;
+    }
+
+    void ExtendedTuner::setConfigurator(UniqueConfigurator configurator)
+    {
+        this->configurator = std::move(configurator);
     }
 
 } // namespace cltune

@@ -22,8 +22,8 @@ using UniqueConfigurator = std::unique_ptr<TunerConfigurator>;
 class ExtendedTuner
 {
 public:
-    // Initializes the extended tuner by providing platform id, device id and configurator class.
-    explicit PUBLIC_API ExtendedTuner(size_t platformId, size_t deviceId, UniqueConfigurator configurator);
+    // Initializes the extended tuner by providing platform id and device id.
+    explicit PUBLIC_API ExtendedTuner(size_t platformId, size_t deviceId);
     
     // Extended tuner destructor.
     PUBLIC_API ~ExtendedTuner();
@@ -105,6 +105,9 @@ public:
 
     // Starts tuning process using the provided configurator.
     PUBLIC_API void tune();
+
+    // Sets the tuner configurator to specified custom configurator.
+    PUBLIC_API void setConfigurator(UniqueConfigurator configurator);
 
 private:
     std::unique_ptr<Tuner> basicTuner;
