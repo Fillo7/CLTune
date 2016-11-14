@@ -151,7 +151,7 @@ TunerImpl::~TunerImpl() {
 // automatically verified with respect to this reference run). Next, all permutations of all tuning-
 // parameters are computed for each kernel and those kernels are run. Their timing-results are
 // collected and stored into the tuning_results_ vector.
-void TunerImpl::Tune() {
+float TunerImpl::Tune() {
 
   // Runs the reference kernel if it is defined
   if (has_reference_) {
@@ -174,6 +174,7 @@ void TunerImpl::Tune() {
       // Stores the result of the tuning
       tuning_results_.push_back(tuning_result);
 
+      return tuning_result.time;
     // Else: there are tuning parameters to iterate over
     } else {
 
@@ -201,7 +202,8 @@ void TunerImpl::Tune() {
                                search_args_[3], search_args_[4]});
           break;
       }
-
+      
+      float bestExecutionTime = std::numeric_limits<float>::max();
       // Iterates over all possible configurations (the permutations of the tuning parameters)
       for (auto p=size_t{0}; p<search->NumConfigurations(); ++p) {
         #ifdef VERBOSE
@@ -243,6 +245,10 @@ void TunerImpl::Tune() {
           PrintResult(stdout, tuning_result, kMessageWarning);
         }
         tuning_results_.push_back(tuning_result);
+
+        if (bestExecutionTime > tuning_result.time) {
+            bestExecutionTime = tuning_result.time;
+        }
       }
 
       // Prints a log of the searching process. This is disabled per default, but can be enabled
@@ -252,6 +258,8 @@ void TunerImpl::Tune() {
         search->PrintLog(file);
         fclose(file);
       }
+
+      return bestExecutionTime;
     }
   }
 }
@@ -433,7 +441,7 @@ TunerImpl::TunerResult TunerImpl::RunKernel(const std::string &source, const Ker
 // =================================================================================================
 
 // Wrapper for the above method, which can be called from public API.
-void TunerImpl::RunSingleKernel(const size_t id, const ParameterRange &parameter_values) {
+float TunerImpl::RunSingleKernel(const size_t id, const ParameterRange &parameter_values) {
   // Runs the reference kernel if it is defined
   if (has_reference_) {
     PrintHeader("Testing reference " + reference_kernel_->name());
@@ -484,6 +492,8 @@ void TunerImpl::RunSingleKernel(const size_t id, const ParameterRange &parameter
   else {
     PrintResult(stdout, tuning_result, kMessageWarning);
   }
+
+  return tuning_result.time;
 }
 
 // =================================================================================================
