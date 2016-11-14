@@ -93,6 +93,20 @@ void Tuner::SetReferenceFromString(const std::string &source, const std::string 
 
 // =================================================================================================
 
+void Tuner::SetReferenceKernel(const size_t id)
+{
+
+}
+
+// =================================================================================================
+
+void Tuner::SetReferenceClass(/* to do: specify interface */)
+{
+
+}
+
+// =================================================================================================
+
 // Adds parameters for a kernel to tune. Also checks whether this parameter already exists.
 void Tuner::AddParameter(const size_t id, const std::string &parameter_name,
                          const std::initializer_list<size_t> &values) {
@@ -370,8 +384,8 @@ void Tuner::OutputSearchLog(const std::string &filename) {
 // =================================================================================================
 
 // Starts the tuning process. See the TunerImpl's implemenation for details
-float Tuner::Tune() {
-  return pimpl->Tune();
+void Tuner::Tune() {
+  pimpl->Tune();
 }
 
 // =================================================================================================
@@ -548,11 +562,6 @@ void Tuner::PrintToFile(const std::string &filename) const {
 // Set the flag to suppress output to true. Note that this cannot be undone.
 void Tuner::SuppressOutput() {
   pimpl->suppress_output_ = true;
-}
-
-// Sets the number of runs to average time measurements.
-void Tuner::SetNumRuns(const size_t num_runs) {
-  pimpl->num_runs_ = num_runs;
 }
 
 // =================================================================================================

@@ -151,7 +151,7 @@ TunerImpl::~TunerImpl() {
 // automatically verified with respect to this reference run). Next, all permutations of all tuning-
 // parameters are computed for each kernel and those kernels are run. Their timing-results are
 // collected and stored into the tuning_results_ vector.
-float TunerImpl::Tune() {
+void TunerImpl::Tune() {
 
   // Runs the reference kernel if it is defined
   if (has_reference_) {
@@ -159,7 +159,7 @@ float TunerImpl::Tune() {
     RunKernel(reference_kernel_->source(), *reference_kernel_, 0, 1);
     StoreReferenceOutput();
   }
-  
+
   // Iterates over all tunable kernels
   for (auto &kernel: kernels_) {
     PrintHeader("Testing kernel "+kernel.name());
@@ -174,7 +174,6 @@ float TunerImpl::Tune() {
       // Stores the result of the tuning
       tuning_results_.push_back(tuning_result);
 
-      return tuning_result.time;
     // Else: there are tuning parameters to iterate over
     } else {
 
@@ -203,7 +202,6 @@ float TunerImpl::Tune() {
           break;
       }
       
-      float bestExecutionTime = std::numeric_limits<float>::max();
       // Iterates over all possible configurations (the permutations of the tuning parameters)
       for (auto p=size_t{0}; p<search->NumConfigurations(); ++p) {
         #ifdef VERBOSE
@@ -245,10 +243,6 @@ float TunerImpl::Tune() {
           PrintResult(stdout, tuning_result, kMessageWarning);
         }
         tuning_results_.push_back(tuning_result);
-
-        if (bestExecutionTime > tuning_result.time) {
-            bestExecutionTime = tuning_result.time;
-        }
       }
 
       // Prints a log of the searching process. This is disabled per default, but can be enabled
@@ -258,8 +252,6 @@ float TunerImpl::Tune() {
         search->PrintLog(file);
         fclose(file);
       }
-
-      return bestExecutionTime;
     }
   }
 }

@@ -2,6 +2,8 @@
 #define CLTUNE_EXTENDED_TUNER_H_
 
 #include <memory>
+#include <utility>
+#include <vector>
 
 #include "cltune.h"
 #include "tuner_configurator.h"
@@ -22,6 +24,13 @@ using UniqueConfigurator = std::unique_ptr<TunerConfigurator>;
 class ExtendedTuner
 {
 public:
+    const std::string extHeader = "[Extended Tuner] ";
+    const std::string extBeforeDuration = "Duration of beforeTuning() method: ";
+    const std::string extAfterDuration = "Duration of afterTuning() method: ";
+    const std::string extKernelDuration = "Duration of fastest kernel execution: ";
+    const std::string extTotalDuration = "Total duration: ";
+    const std::string extMs = "ms.";
+
     // Initializes the extended tuner by providing platform id and device id.
     explicit PUBLIC_API ExtendedTuner(size_t platformId, size_t deviceId);
     
@@ -106,12 +115,15 @@ public:
     // Starts tuning process using the provided configurator.
     PUBLIC_API void tune();
 
-    // Sets the tuner configurator to specified custom configurator.
-    PUBLIC_API void setConfigurator(UniqueConfigurator configurator);
+    // Sets the tuner configurator for specified kernel. There can be up to one configurator per kernel.
+    PUBLIC_API void setConfigurator(const size_t id, UniqueConfigurator configurator);
 
 private:
     std::unique_ptr<Tuner> basicTuner;
-    UniqueConfigurator configurator;
+    std::vector<std::pair<size_t, UniqueConfigurator>> configurators;
+
+    // Checks if configurator exists for given kernel. Returns its position inside vector if it does, returns -1 otherwise.
+    size_t getConfiguratorIndex(const size_t id);
 };
 
 } // namespace cltune

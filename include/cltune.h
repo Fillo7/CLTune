@@ -89,6 +89,8 @@ class Tuner {
   void PUBLIC_API SetReferenceFromString(const std::string &source,
                                          const std::string &kernel_name,
                                          const IntRange &global, const IntRange &local);
+  void PUBLIC_API SetReferenceKernel(const size_t id);
+  void PUBLIC_API SetReferenceClass(/* to do: specify interface */);
 
   // Adds a new tuning parameter for a kernel with a specific ID. The parameter has a name, the
   // number of values, and a list of values.
@@ -152,7 +154,7 @@ class Tuner {
 
   // Starts the tuning process: compile all kernels and run them for each permutation of the tuning-
   // parameters. Note that this might take a while.
-  float PUBLIC_API Tune();
+  void PUBLIC_API Tune();
 
   // Runs specified kernel with given configuration, measures the running time and prints result to screen.
   // Does not perform any tuning.
@@ -174,9 +176,6 @@ class Tuner {
 
   // Disables all further printing to stdout
   void PUBLIC_API SuppressOutput();
-
-  // Changes the number of times each kernel should be run. Used for averaging execution times.
-  void PUBLIC_API SetNumRuns(const size_t num_runs);
 
  private:
 

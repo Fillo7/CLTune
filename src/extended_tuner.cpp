@@ -235,47 +235,77 @@ namespace cltune
 
     void ExtendedTuner::runSingleKernel(const size_t id, const ParameterRange& parameterValues)
     {
+        size_t configuratorIndex = getConfiguratorIndex(id);
+
         auto beforeTuningBegin = std::chrono::high_resolution_clock::now();
-        configurator->beforeTuning();
+        if (configuratorIndex >= 0)
+        {
+            configurators.at(configuratorIndex).second->beforeTuning();
+        }
         auto beforeTuningEnd = std::chrono::high_resolution_clock::now();
         auto beforeDuration = std::chrono::duration_cast<std::chrono::milliseconds>(beforeTuningEnd - beforeTuningBegin).count();
 
         float kernelDuration = basicTuner->RunSingleKernel(id, parameterValues);
 
         auto afterTuningBegin = std::chrono::high_resolution_clock::now();
-        configurator->afterTuning();
+        if (configuratorIndex >= 0)
+        {
+            configurators.at(configuratorIndex).second->afterTuning();
+        }
         auto afterTuningEnd = std::chrono::high_resolution_clock::now();
         auto afterDuration = std::chrono::duration_cast<std::chrono::milliseconds>(afterTuningEnd - afterTuningBegin).count();
 
-        std::cout << "[Extended Tuner]" << "Duration of beforeTuning() method: " << beforeDuration << "ms." << std::endl;
-        std::cout << "[Extended Tuner]" << "Duration of kernel execution: " << kernelDuration << "ms." << std::endl;
-        std::cout << "[Extended Tuner]" << "Duration of afterTuning() method: " << afterDuration << "ms." << std::endl;
-        std::cout << "[Extended Tuner]" << "Total duration: " << beforeDuration + afterDuration + kernelDuration << "ms." << std::endl;
+        std::cout << extHeader << extBeforeDuration << beforeDuration << extMs << std::endl;
+        std::cout << extHeader << extKernelDuration << kernelDuration << extMs << std::endl;
+        std::cout << extHeader << extAfterDuration << afterDuration << extMs << std::endl;
+        std::cout << extHeader << extTotalDuration << beforeDuration + afterDuration + kernelDuration << extMs << std::endl;
     }
 
     void ExtendedTuner::tune()
     {
         auto beforeTuningBegin = std::chrono::high_resolution_clock::now();
-        configurator->beforeTuning();
+        configurators.at(0).second->beforeTuning();
         auto beforeTuningEnd = std::chrono::high_resolution_clock::now();
         auto beforeDuration = std::chrono::duration_cast<std::chrono::milliseconds>(beforeTuningEnd - beforeTuningBegin).count();
 
-        float bestKernelDuration = basicTuner->Tune();
+        float bestKernelDuration = 0.0f; // to do: provide support in basic tuner for this
+        basicTuner->Tune();
 
         auto afterTuningBegin = std::chrono::high_resolution_clock::now();
-        configurator->afterTuning();
+        configurators.at(0).second->afterTuning();
         auto afterTuningEnd = std::chrono::high_resolution_clock::now();
         auto afterDuration = std::chrono::duration_cast<std::chrono::milliseconds>(afterTuningEnd - afterTuningBegin).count();
 
-        std::cout << "[Extended Tuner]" << "Duration of beforeTuning() method: " << beforeDuration << "ms." << std::endl;
-        std::cout << "[Extended Tuner]" << "Duration of fastest kernel execution: " << bestKernelDuration << "ms." << std::endl;
-        std::cout << "[Extended Tuner]" << "Duration of afterTuning() method: " << afterDuration << "ms." << std::endl;
-        std::cout << "[Extended Tuner]" << "Total duration: " << beforeDuration + afterDuration + bestKernelDuration << "ms." << std::endl;
+        std::cout << extHeader << extBeforeDuration << beforeDuration << extMs << std::endl;
+        std::cout << extHeader << extKernelDuration << bestKernelDuration << extMs << std::endl;
+        std::cout << extHeader << extAfterDuration << afterDuration << extMs << std::endl;
+        std::cout << extHeader << extTotalDuration << beforeDuration + afterDuration + bestKernelDuration << extMs << std::endl;
     }
 
-    void ExtendedTuner::setConfigurator(UniqueConfigurator configurator)
+    void ExtendedTuner::setConfigurator(const size_t id, UniqueConfigurator configurator)
     {
-        this->configurator = std::move(configurator);
+        for (auto& pair : configurators)
+        {
+            if (pair.first == id)
+            {
+                pair.second = std::move(configurator);
+                return;
+            }
+        }
+        configurators.push_back(std::make_pair(id, std::move(configurator)));
+    }
+
+    size_t ExtendedTuner::getConfiguratorIndex(const size_t id)
+    {
+        for (size_t i = 0; i < configurators.size(); i++)
+        {
+            if (configurators.at(i).first == id)
+            {
+                return i;
+            }
+        }
+
+        return -1;
     }
 
 } // namespace cltune

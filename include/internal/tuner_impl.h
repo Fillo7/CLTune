@@ -85,7 +85,7 @@ class TunerImpl {
   ~TunerImpl();
 
   // Starts the tuning process. This function is called directly from the Tuner API.
-  float Tune();
+  void Tune();
 
   // Compiles and runs a kernel and returns the elapsed time
   TunerResult RunKernel(const std::string &source, const KernelInfo &kernel,
@@ -135,7 +135,7 @@ class TunerImpl {
   Queue queue_;
 
   // Settings
-  size_t num_runs_; // This is used for more-accurate execution time measurement
+  size_t num_runs_; // This was used for more-accurate execution time measurement, currently always one
   bool has_reference_;
   bool suppress_output_;
   bool output_search_process_;
