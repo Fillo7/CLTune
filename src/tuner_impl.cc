@@ -504,6 +504,10 @@ PublicTunerResult TunerImpl::ConvertTuningResultToPublic(const TunerImpl::TunerR
   public_result.status = result.status;
   public_result.time = result.time;
 
+  for (auto &parameter : result.configuration) {
+      public_result.parameter_values.push_back(std::make_pair(parameter.name, parameter.value));
+  }
+
   return public_result;
 }
 

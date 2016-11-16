@@ -27,7 +27,8 @@ public:
     const std::string extHeader = "[Extended Tuner] ";
     const std::string extBeforeDuration = "Duration of beforeTuning() method: ";
     const std::string extAfterDuration = "Duration of afterTuning() method: ";
-    const std::string extKernelDuration = "Duration of fastest kernel execution: ";
+    const std::string extKernelDuration = "Duration of the fastest kernel execution: ";
+    const std::string extKernelParameters = "Parameters of the fastest kernel: ";
     const std::string extTotalDuration = "Total duration: ";
     const std::string extMs = "ms.";
 
@@ -124,6 +125,9 @@ private:
 
     // Checks if configurator exists for given kernel. Returns its position inside vector if it does, returns -1 otherwise.
     size_t getConfiguratorIndex(const size_t id);
+
+    // Prints kernel parameters and their values for given result.
+    void printKernelParameters(const cltune::PublicTunerResult& result);
 };
 
 } // namespace cltune

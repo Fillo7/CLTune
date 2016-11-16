@@ -92,11 +92,11 @@ class Tuner {
   // Sets the reference kernel. Same as the AddKernel function, but in this case there is only one
   // reference kernel. Calling this function again will overwrite the previous reference kernel.
   void PUBLIC_API SetReference(const std::vector<std::string> &filenames,
-                                     const std::string &kernel_name, const IntRange &global,
-                                     const IntRange &local);
+                               const std::string &kernel_name,
+                               const IntRange &global, const IntRange &local);
   void PUBLIC_API SetReferenceFromString(const std::string &source,
-                                               const std::string &kernel_name,
-                                               const IntRange &global, const IntRange &local);
+                                         const std::string &kernel_name,
+                                         const IntRange &global, const IntRange &local);
 
   // Adds a new tuning parameter for a kernel with a specific ID. The parameter has a name, the
   // number of values, and a list of values.

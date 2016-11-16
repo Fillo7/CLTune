@@ -13,9 +13,7 @@ namespace cltune
 
     ExtendedTuner::ExtendedTuner(size_t platformId, size_t deviceId):
         basicTuner(new Tuner(platformId, deviceId))
-    {
-        basicTuner->SuppressOutput();
-    }
+    {}
 
     ExtendedTuner::~ExtendedTuner() {}
 
@@ -270,12 +268,13 @@ namespace cltune
 
         std::vector<cltune::PublicTunerResult> results = basicTuner->Tune();
 
-        float bestTime = std::numeric_limits<float>::max();
+        cltune::PublicTunerResult* bestResult = &(results.at(0));
+
         for (auto& result : results)
         {
-            if (bestTime > result.time)
+            if (bestResult->time > result.time)
             {
-                bestTime = result.time;
+                bestResult = &result;
             }
         }
 
@@ -285,9 +284,12 @@ namespace cltune
         auto afterDuration = std::chrono::duration_cast<std::chrono::milliseconds>(afterTuningEnd - afterTuningBegin).count();
 
         std::cout << extHeader << extBeforeDuration << beforeDuration << extMs << std::endl;
-        std::cout << extHeader << extKernelDuration << bestTime << extMs << std::endl;
+        std::cout << extHeader << extKernelDuration << bestResult->time << extMs << std::endl;
+        std::cout << extHeader << extKernelParameters;
+        printKernelParameters(*bestResult);
+        std::cout << std::endl;
         std::cout << extHeader << extAfterDuration << afterDuration << extMs << std::endl;
-        std::cout << extHeader << extTotalDuration << beforeDuration + afterDuration + bestTime << extMs << std::endl;
+        std::cout << extHeader << extTotalDuration << beforeDuration + afterDuration + bestResult->time << extMs << std::endl;
     }
 
     void ExtendedTuner::setConfigurator(const size_t id, UniqueConfigurator configurator)
@@ -314,6 +316,12 @@ namespace cltune
         }
 
         return -1;
+    }
+
+    void ExtendedTuner::printKernelParameters(const cltune::PublicTunerResult& result) {
+        for (auto& param : result.parameter_values) {
+            std::cout << "[" << param.first << ": " << param.second << "] ";
+        }
     }
 
 } // namespace cltune
