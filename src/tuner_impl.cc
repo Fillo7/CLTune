@@ -151,7 +151,7 @@ TunerImpl::~TunerImpl() {
 // automatically verified with respect to this reference run). Next, all permutations of all tuning-
 // parameters are computed for each kernel and those kernels are run. Their timing-results are
 // collected and stored into the tuning_results_ vector.
-void TunerImpl::Tune() {
+std::vector<PublicTunerResult> TunerImpl::Tune() {
 
   // Runs the reference kernel if it is defined
   if (has_reference_) {
@@ -254,6 +254,13 @@ void TunerImpl::Tune() {
       }
     }
   }
+
+  std::vector<PublicTunerResult> public_results;
+  for (auto &result : tuning_results_) {
+    public_results.push_back(ConvertTuningResultToPublic(result));
+  }
+
+  return public_results;
 }
 
 // =================================================================================================
@@ -433,7 +440,7 @@ TunerImpl::TunerResult TunerImpl::RunKernel(const std::string &source, const Ker
 // =================================================================================================
 
 // Wrapper for the above method, which can be called from public API.
-float TunerImpl::RunSingleKernel(const size_t id, const ParameterRange &parameter_values) {
+PublicTunerResult TunerImpl::RunSingleKernel(const size_t id, const ParameterRange &parameter_values) {
   // Runs the reference kernel if it is defined
   if (has_reference_) {
     PrintHeader("Testing reference " + reference_kernel_->name());
@@ -485,7 +492,19 @@ float TunerImpl::RunSingleKernel(const size_t id, const ParameterRange &paramete
     PrintResult(stdout, tuning_result, kMessageWarning);
   }
 
-  return tuning_result.time;
+  return ConvertTuningResultToPublic(tuning_result);
+}
+
+// =================================================================================================
+
+// Converts TunerResult object to PublicTunerResult.
+PublicTunerResult TunerImpl::ConvertTuningResultToPublic(const TunerImpl::TunerResult &result) {
+  PublicTunerResult public_result;
+  public_result.kernel_name = result.kernel_name;
+  public_result.status = result.status;
+  public_result.time = result.time;
+
+  return public_result;
 }
 
 // =================================================================================================

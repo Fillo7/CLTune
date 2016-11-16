@@ -65,6 +65,14 @@ enum class Model { kLinearRegression, kNeuralNetwork };
 // Verification techniques
 enum class VerificationTechnique { AbsoluteDifference, SideBySide };
 
+// Structure that holds results of a tuning run
+struct PublicTunerResult {
+    std::string kernel_name;
+    float time;
+    bool status;
+    ParameterRange parameter_values;
+};
+
 // The tuner class and its public API
 class Tuner {
  public:
@@ -84,13 +92,11 @@ class Tuner {
   // Sets the reference kernel. Same as the AddKernel function, but in this case there is only one
   // reference kernel. Calling this function again will overwrite the previous reference kernel.
   void PUBLIC_API SetReference(const std::vector<std::string> &filenames,
-                               const std::string &kernel_name,
-                               const IntRange &global, const IntRange &local);
+                                     const std::string &kernel_name, const IntRange &global,
+                                     const IntRange &local);
   void PUBLIC_API SetReferenceFromString(const std::string &source,
-                                         const std::string &kernel_name,
-                                         const IntRange &global, const IntRange &local);
-  void PUBLIC_API SetReferenceKernel(const size_t id);
-  void PUBLIC_API SetReferenceClass(/* to do: specify interface */);
+                                               const std::string &kernel_name,
+                                               const IntRange &global, const IntRange &local);
 
   // Adds a new tuning parameter for a kernel with a specific ID. The parameter has a name, the
   // number of values, and a list of values.
@@ -154,11 +160,11 @@ class Tuner {
 
   // Starts the tuning process: compile all kernels and run them for each permutation of the tuning-
   // parameters. Note that this might take a while.
-  void PUBLIC_API Tune();
+  std::vector<PublicTunerResult> PUBLIC_API Tune();
 
   // Runs specified kernel with given configuration, measures the running time and prints result to screen.
   // Does not perform any tuning.
-  float PUBLIC_API RunSingleKernel(const size_t id, const ParameterRange &parameter_values);
+  PublicTunerResult PUBLIC_API RunSingleKernel(const size_t id, const ParameterRange &parameter_values);
 
   // Trains a machine learning model based on the search space explored so far. Then, all the
   // missing data-points are estimated based on this model. This is only useful if a fraction of

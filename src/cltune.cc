@@ -93,20 +93,6 @@ void Tuner::SetReferenceFromString(const std::string &source, const std::string 
 
 // =================================================================================================
 
-void Tuner::SetReferenceKernel(const size_t id)
-{
-
-}
-
-// =================================================================================================
-
-void Tuner::SetReferenceClass(/* to do: specify interface */)
-{
-
-}
-
-// =================================================================================================
-
 // Adds parameters for a kernel to tune. Also checks whether this parameter already exists.
 void Tuner::AddParameter(const size_t id, const std::string &parameter_name,
                          const std::initializer_list<size_t> &values) {
@@ -384,14 +370,14 @@ void Tuner::OutputSearchLog(const std::string &filename) {
 // =================================================================================================
 
 // Starts the tuning process. See the TunerImpl's implemenation for details
-void Tuner::Tune() {
-  pimpl->Tune();
+std::vector<PublicTunerResult> Tuner::Tune() {
+  return pimpl->Tune();
 }
 
 // =================================================================================================
 
 // Runs single kernel with given configuration and measures time.
-float Tuner::RunSingleKernel(const size_t id, const ParameterRange &parameter_values) {
+PublicTunerResult Tuner::RunSingleKernel(const size_t id, const ParameterRange &parameter_values) {
   if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
   return pimpl->RunSingleKernel(id, parameter_values);
 }

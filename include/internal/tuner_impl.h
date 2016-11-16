@@ -85,14 +85,17 @@ class TunerImpl {
   ~TunerImpl();
 
   // Starts the tuning process. This function is called directly from the Tuner API.
-  void Tune();
+  std::vector<PublicTunerResult> Tune();
 
   // Compiles and runs a kernel and returns the elapsed time
   TunerResult RunKernel(const std::string &source, const KernelInfo &kernel,
                         const size_t configuration_id, const size_t num_configurations);
 
   // Wrapper for the above method, which can be called from public API.
-  float RunSingleKernel(const size_t id, const ParameterRange &parameter_values);
+  PublicTunerResult RunSingleKernel(const size_t id, const ParameterRange &parameter_values);
+
+  // Converts TunerResult object to PublicTunerResult.
+  PublicTunerResult ConvertTuningResultToPublic(const TunerResult &result);
 
   // Copies an output buffer
   template <typename T> KernelInfo::MemArgument CopyOutputBuffer(KernelInfo::MemArgument &argument);

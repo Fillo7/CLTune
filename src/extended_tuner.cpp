@@ -1,8 +1,6 @@
 #include <chrono>
 #include <complex>
 #include <iostream>
-#include <memory>
-#include <utility>
 
 #include "CL/cl.h"
 #include "extended_tuner.h"
@@ -15,7 +13,9 @@ namespace cltune
 
     ExtendedTuner::ExtendedTuner(size_t platformId, size_t deviceId):
         basicTuner(new Tuner(platformId, deviceId))
-    {}
+    {
+        basicTuner->SuppressOutput();
+    }
 
     ExtendedTuner::~ExtendedTuner() {}
 
@@ -245,7 +245,7 @@ namespace cltune
         auto beforeTuningEnd = std::chrono::high_resolution_clock::now();
         auto beforeDuration = std::chrono::duration_cast<std::chrono::milliseconds>(beforeTuningEnd - beforeTuningBegin).count();
 
-        float kernelDuration = basicTuner->RunSingleKernel(id, parameterValues);
+        cltune::PublicTunerResult result = basicTuner->RunSingleKernel(id, parameterValues);
 
         auto afterTuningBegin = std::chrono::high_resolution_clock::now();
         if (configuratorIndex >= 0)
@@ -256,9 +256,9 @@ namespace cltune
         auto afterDuration = std::chrono::duration_cast<std::chrono::milliseconds>(afterTuningEnd - afterTuningBegin).count();
 
         std::cout << extHeader << extBeforeDuration << beforeDuration << extMs << std::endl;
-        std::cout << extHeader << extKernelDuration << kernelDuration << extMs << std::endl;
+        std::cout << extHeader << extKernelDuration << result.time << extMs << std::endl;
         std::cout << extHeader << extAfterDuration << afterDuration << extMs << std::endl;
-        std::cout << extHeader << extTotalDuration << beforeDuration + afterDuration + kernelDuration << extMs << std::endl;
+        std::cout << extHeader << extTotalDuration << beforeDuration + afterDuration + result.time << extMs << std::endl;
     }
 
     void ExtendedTuner::tune()
@@ -268,8 +268,16 @@ namespace cltune
         auto beforeTuningEnd = std::chrono::high_resolution_clock::now();
         auto beforeDuration = std::chrono::duration_cast<std::chrono::milliseconds>(beforeTuningEnd - beforeTuningBegin).count();
 
-        float bestKernelDuration = 0.0f; // to do: provide support in basic tuner for this
-        basicTuner->Tune();
+        std::vector<cltune::PublicTunerResult> results = basicTuner->Tune();
+
+        float bestTime = std::numeric_limits<float>::max();
+        for (auto& result : results)
+        {
+            if (bestTime > result.time)
+            {
+                bestTime = result.time;
+            }
+        }
 
         auto afterTuningBegin = std::chrono::high_resolution_clock::now();
         configurators.at(0).second->afterTuning();
@@ -277,9 +285,9 @@ namespace cltune
         auto afterDuration = std::chrono::duration_cast<std::chrono::milliseconds>(afterTuningEnd - afterTuningBegin).count();
 
         std::cout << extHeader << extBeforeDuration << beforeDuration << extMs << std::endl;
-        std::cout << extHeader << extKernelDuration << bestKernelDuration << extMs << std::endl;
+        std::cout << extHeader << extKernelDuration << bestTime << extMs << std::endl;
         std::cout << extHeader << extAfterDuration << afterDuration << extMs << std::endl;
-        std::cout << extHeader << extTotalDuration << beforeDuration + afterDuration + bestKernelDuration << extMs << std::endl;
+        std::cout << extHeader << extTotalDuration << beforeDuration + afterDuration + bestTime << extMs << std::endl;
     }
 
     void ExtendedTuner::setConfigurator(const size_t id, UniqueConfigurator configurator)
