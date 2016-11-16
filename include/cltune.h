@@ -69,6 +69,7 @@ enum class VerificationTechnique { AbsoluteDifference, SideBySide };
 struct PublicTunerResult {
     std::string kernel_name;
     float time;
+    size_t threads;
     bool status;
     ParameterRange parameter_values;
 };

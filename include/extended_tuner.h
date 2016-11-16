@@ -27,7 +27,8 @@ public:
     const std::string extHeader = "[Extended Tuner] ";
     const std::string extBeforeDuration = "Duration of beforeTuning() method: ";
     const std::string extAfterDuration = "Duration of afterTuning() method: ";
-    const std::string extKernelDuration = "Duration of the fastest kernel execution: ";
+    const std::string extKernelDuration = "Duration of kernel execution: ";
+    const std::string extFastestKernelDuration = "Duration of the fastest kernel execution: ";
     const std::string extKernelParameters = "Parameters of the fastest kernel: ";
     const std::string extTotalDuration = "Total duration: ";
     const std::string extMs = "ms.";
@@ -104,30 +105,43 @@ public:
     // based on this model. This is only useful if a fraction of the search space is explored, as is the case when doing random-search.
     void PUBLIC_API modelPrediction(const Model modelType, const float validationFraction, const size_t testTopXConfigurations);
 
-    // Prints the results of the tuning either to screen (stdout) or to a specific output-file. Returns the execution time in miliseconds.
-    double PUBLIC_API printToScreen() const;
-    void PUBLIC_API printFormatted() const;
-    void PUBLIC_API printJSON(const std::string& filename, const std::vector<std::pair<std::string, std::string>>& descriptions) const;
-    void PUBLIC_API printToFile(const std::string& filename) const;
-
     // Runs single kernel using the provided configurator.
-    PUBLIC_API void runSingleKernel(const size_t id, const ParameterRange& parameterValues);
+    void PUBLIC_API runSingleKernel(const size_t id, const ParameterRange& parameterValues);
 
     // Starts tuning process using the provided configurator.
-    PUBLIC_API void tune();
+    void PUBLIC_API tune();
 
     // Sets the tuner configurator for specified kernel. There can be up to one configurator per kernel.
-    PUBLIC_API void setConfigurator(const size_t id, UniqueConfigurator configurator);
+    void PUBLIC_API setConfigurator(const size_t id, UniqueConfigurator configurator);
+
+    // Prints tuning result of kernel with given id to screen.
+    void PUBLIC_API PrintToScreen(const size_t id);
+
+    // Prints tuning results of all kernels to screen.
+    void PUBLIC_API PrintToScreen();
 
 private:
+    struct ExtendedTunerResult
+    {
+        cltune::PublicTunerResult basicResult;
+        float beforeDuration;
+        float afterDuration;
+    };
+
+    size_t kernelCount;
     std::unique_ptr<Tuner> basicTuner;
     std::vector<std::pair<size_t, UniqueConfigurator>> configurators;
+    std::vector<std::pair<size_t, ExtendedTunerResult>> results;
 
     // Checks if configurator exists for given kernel. Returns its position inside vector if it does, returns -1 otherwise.
     size_t getConfiguratorIndex(const size_t id);
 
     // Prints kernel parameters and their values for given result.
     void printKernelParameters(const cltune::PublicTunerResult& result);
+
+    // Stores tuning result for given kernel in results attribute.
+    void storeTunerResult(const size_t id, const cltune::PublicTunerResult& result,
+                          const float beforeTuningDuration, const float afterTuningDuration);
 };
 
 } // namespace cltune

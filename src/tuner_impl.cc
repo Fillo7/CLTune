@@ -501,8 +501,9 @@ PublicTunerResult TunerImpl::RunSingleKernel(const size_t id, const ParameterRan
 PublicTunerResult TunerImpl::ConvertTuningResultToPublic(const TunerImpl::TunerResult &result) {
   PublicTunerResult public_result;
   public_result.kernel_name = result.kernel_name;
-  public_result.status = result.status;
   public_result.time = result.time;
+  public_result.threads = result.threads;
+  public_result.status = result.status;
 
   for (auto &parameter : result.configuration) {
       public_result.parameter_values.push_back(std::make_pair(parameter.name, parameter.value));
