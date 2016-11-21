@@ -115,10 +115,10 @@ public:
     void PUBLIC_API setConfigurator(const size_t id, UniqueConfigurator configurator);
 
     // Prints tuning result of kernel with given id to screen.
-    void PUBLIC_API PrintToScreen(const size_t id);
+    void PUBLIC_API PrintToScreen(const size_t id) const;
 
     // Prints tuning results of all kernels to screen.
-    void PUBLIC_API PrintToScreen();
+    void PUBLIC_API PrintToScreen() const;
 
 private:
     struct ExtendedTunerResult
@@ -134,10 +134,10 @@ private:
     std::vector<std::pair<size_t, ExtendedTunerResult>> results;
 
     // Checks if configurator exists for given kernel. Returns its position inside vector if it does, returns -1 otherwise.
-    size_t getConfiguratorIndex(const size_t id);
+    size_t getConfiguratorIndex(const size_t id) const;
 
     // Prints kernel parameters and their values for given result.
-    void printKernelParameters(const cltune::PublicTunerResult& result);
+    void printKernelParameters(const cltune::PublicTunerResult& result) const;
 
     // Stores tuning result for given kernel in results attribute.
     void storeTunerResult(const size_t id, const cltune::PublicTunerResult& result,

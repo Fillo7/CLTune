@@ -151,7 +151,7 @@ TunerImpl::~TunerImpl() {
 // automatically verified with respect to this reference run). Next, all permutations of all tuning-
 // parameters are computed for each kernel and those kernels are run. Their timing-results are
 // collected and stored into the tuning_results_ vector.
-std::vector<PublicTunerResult> TunerImpl::Tune() {
+std::vector<PublicTunerResult> TunerImpl::TuneAll() {
 
   // Runs the reference kernel if it is defined
   if (has_reference_) {
@@ -161,105 +161,134 @@ std::vector<PublicTunerResult> TunerImpl::Tune() {
   }
 
   // Iterates over all tunable kernels
-  for (auto &kernel: kernels_) {
-    PrintHeader("Testing kernel "+kernel.name());
-
-    // If there are no tuning parameters, simply run the kernel and store the results
-    if (kernel.parameters().size() == 0) {
-
-        // Compiles and runs the kernel
-      auto tuning_result = RunKernel(kernel.source(), kernel, 0, 1);
-      tuning_result.status = VerifyOutput();
-
-      // Stores the result of the tuning
-      tuning_results_.push_back(tuning_result);
-
-    // Else: there are tuning parameters to iterate over
-    } else {
-
-      // Computes the permutations of all parameters and pass them to a (smart) search algorithm
-      #ifdef VERBOSE
-        fprintf(stdout, "%s Computing the permutations of all parameters\n", kMessageVerbose.c_str());
-      #endif
-      kernel.SetConfigurations();
-
-      // Creates the selected search algorithm
-      std::unique_ptr<Searcher> search;
-      switch (search_method_) {
-        case SearchMethod::FullSearch:
-          search.reset(new FullSearch{kernel.configurations()});
-          break;
-        case SearchMethod::RandomSearch:
-          search.reset(new RandomSearch{kernel.configurations(), search_args_[0]});
-          break;
-        case SearchMethod::Annealing:
-          search.reset(new Annealing{kernel.configurations(), search_args_[0], search_args_[1]});
-          break;
-        case SearchMethod::PSO:
-          search.reset(new PSO{kernel.configurations(), kernel.parameters(), search_args_[0],
-                               static_cast<size_t>(search_args_[1]), search_args_[2],
-                               search_args_[3], search_args_[4]});
-          break;
-      }
-      
-      // Iterates over all possible configurations (the permutations of the tuning parameters)
-      for (auto p=size_t{0}; p<search->NumConfigurations(); ++p) {
-        #ifdef VERBOSE
-          fprintf(stdout, "%s Exploring configuration (%zu out of %zu)\n", kMessageVerbose.c_str(),
-                  p + 1, search->NumConfigurations());
-        #endif
-        auto permutation = search->GetConfiguration();
-
-        // Adds the parameters to the source-code string as defines
-        auto source = std::string{};
-        for (auto &config: permutation) {
-          source += config.GetDefine();
-        }
-        source += kernel.source();
-
-        // Updates the local range with the parameter values
-        kernel.ComputeRanges(permutation);
-
-        // Updates number of kernel iterations based on parameter value
-        kernel.SetNumCurrentIterations(permutation);
-
-        // Compiles and runs the kernel
-        auto tuning_result = RunKernel(source, kernel, p, search->NumConfigurations());
-        tuning_result.status = VerifyOutput();
-
-        // Gives timing feedback to the search algorithm and calculates the next index
-        search->PushExecutionTime(tuning_result.time);
-        search->CalculateNextIndex();
-
-        // Stores the parameters and the timing-result
-        tuning_result.configuration = permutation;
-        if (tuning_result.time == std::numeric_limits<float>::max()) {
-          tuning_result.time = 0.0;
-          PrintResult(stdout, tuning_result, kMessageFailure);
-          tuning_result.time = std::numeric_limits<float>::max();
-          tuning_result.status = false;
-        }
-        else if (!tuning_result.status) {
-          PrintResult(stdout, tuning_result, kMessageWarning);
-        }
-        tuning_results_.push_back(tuning_result);
-      }
-
-      // Prints a log of the searching process. This is disabled per default, but can be enabled
-      // using the "OutputSearchLog" function.
-      if (output_search_process_) {
-        auto file = fopen(search_log_filename_.c_str(), "w");
-        search->PrintLog(file);
-        fclose(file);
-      }
-    }
+  for (size_t id = 0; id < kernels_.size(); id++) {
+    std::vector<PublicTunerResult> partial_results = TuneSingleKernel(id, false, false);
   }
 
   std::vector<PublicTunerResult> public_results;
+
   for (auto &result : tuning_results_) {
     public_results.push_back(ConvertTuningResultToPublic(result));
   }
 
+  return public_results;
+}
+
+// =================================================================================================
+
+std::vector<PublicTunerResult> TunerImpl::TuneSingleKernel(const size_t id, const bool test_reference,
+                                                           const bool clear_previous_results) {
+  if (clear_previous_results) {
+    tuning_results_.clear();
+  }
+
+  // Runs the reference kernel if it is defined
+  if (has_reference_ && test_reference) {
+    PrintHeader("Testing reference " + reference_kernel_->name());
+    RunKernel(reference_kernel_->source(), *reference_kernel_, 0, 1);
+    StoreReferenceOutput();
+  }
+
+  KernelInfo& kernel = kernels_.at(id);
+  PrintHeader("Testing kernel " + kernel.name());
+
+  // If there are no tuning parameters, simply run the kernel and store the results
+  if (kernel.parameters().size() == 0) {
+
+    // Compiles and runs the kernel
+    auto tuning_result = RunKernel(kernel.source(), kernel, 0, 1);
+    tuning_result.status = VerifyOutput();
+
+    // Stores the result of the tuning
+    tuning_results_.push_back(tuning_result);
+
+    // Else: there are tuning parameters to iterate over
+  }
+  else {
+
+    // Computes the permutations of all parameters and pass them to a (smart) search algorithm
+    #ifdef VERBOSE
+      fprintf(stdout, "%s Computing the permutations of all parameters\n", kMessageVerbose.c_str());
+    #endif
+    kernel.SetConfigurations();
+
+    // Creates the selected search algorithm
+    std::unique_ptr<Searcher> search;
+    switch (search_method_) {
+      case SearchMethod::FullSearch:
+        search.reset(new FullSearch{ kernel.configurations() });
+        break;
+      case SearchMethod::RandomSearch:
+        search.reset(new RandomSearch{ kernel.configurations(), search_args_[0] });
+        break;
+      case SearchMethod::Annealing:
+        search.reset(new Annealing{ kernel.configurations(), search_args_[0], search_args_[1] });
+        break;
+      case SearchMethod::PSO:
+        search.reset(new PSO{ kernel.configurations(), kernel.parameters(), search_args_[0],
+                         static_cast<size_t>(search_args_[1]), search_args_[2],
+                         search_args_[3], search_args_[4] });
+        break;
+    }
+
+    // Iterates over all possible configurations (the permutations of the tuning parameters)
+    for (auto p = size_t{ 0 }; p < search->NumConfigurations(); ++p) {
+      #ifdef VERBOSE
+        fprintf(stdout, "%s Exploring configuration (%zu out of %zu)\n", kMessageVerbose.c_str(),
+                p + 1, search->NumConfigurations());
+      #endif
+      auto permutation = search->GetConfiguration();
+
+      // Adds the parameters to the source-code string as defines
+      auto source = std::string{};
+      for (auto &config : permutation) {
+        source += config.GetDefine();
+      }
+      source += kernel.source();
+
+      // Updates the local range with the parameter values
+      kernel.ComputeRanges(permutation);
+
+      // Updates number of kernel iterations based on parameter value
+      kernel.SetNumCurrentIterations(permutation);
+
+      // Compiles and runs the kernel
+      auto tuning_result = RunKernel(source, kernel, p, search->NumConfigurations());
+      tuning_result.status = VerifyOutput();
+
+      // Gives timing feedback to the search algorithm and calculates the next index
+      search->PushExecutionTime(tuning_result.time);
+      search->CalculateNextIndex();
+
+      // Stores the parameters and the timing-result
+      tuning_result.configuration = permutation;
+      if (tuning_result.time == std::numeric_limits<float>::max()) {
+        tuning_result.time = 0.0;
+        PrintResult(stdout, tuning_result, kMessageFailure);
+        tuning_result.time = std::numeric_limits<float>::max();
+        tuning_result.status = false;
+      }
+      else if (!tuning_result.status) {
+        PrintResult(stdout, tuning_result, kMessageWarning);
+      }
+      tuning_results_.push_back(tuning_result);
+    }
+
+    // Prints a log of the searching process. This is disabled per default, but can be enabled
+    // using the "OutputSearchLog" function.
+    if (output_search_process_) {
+      auto file = fopen(search_log_filename_.c_str(), "w");
+      search->PrintLog(file);
+      fclose(file);
+    }
+  }
+
+  std::vector<PublicTunerResult> public_results;
+  if(clear_previous_results) {
+    for (auto &result : tuning_results_) {
+      public_results.push_back(ConvertTuningResultToPublic(result));
+    }
+  }
   return public_results;
 }
 
@@ -439,7 +468,7 @@ TunerImpl::TunerResult TunerImpl::RunKernel(const std::string &source, const Ker
 
 // =================================================================================================
 
-// Wrapper for the above method, which can be called from public API.
+// Wrapper for RunKernel() method, which can be called from public API.
 PublicTunerResult TunerImpl::RunSingleKernel(const size_t id, const ParameterRange &parameter_values) {
   // Runs the reference kernel if it is defined
   if (has_reference_) {

@@ -161,7 +161,10 @@ class Tuner {
 
   // Starts the tuning process: compile all kernels and run them for each permutation of the tuning-
   // parameters. Note that this might take a while.
-  std::vector<PublicTunerResult> PUBLIC_API Tune();
+  std::vector<PublicTunerResult> PUBLIC_API TuneAll();
+
+  // Starts the tuning process, but this time only for specified kernel.
+  std::vector<PublicTunerResult> PUBLIC_API TuneSingleKernel(const size_t id);
 
   // Runs specified kernel with given configuration, measures the running time and prints result to screen.
   // Does not perform any tuning.

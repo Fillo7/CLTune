@@ -219,7 +219,7 @@ namespace cltune
         basicTuner->ChooseVerificationTechnique(technique, toleranceTreshold);
     }
 
-    void ExtendedTuner::outputSearchLog(const std::string &filename)
+    void ExtendedTuner::outputSearchLog(const std::string& filename)
     {
         basicTuner->OutputSearchLog(filename);
     }
@@ -274,7 +274,7 @@ namespace cltune
         auto beforeTuningEnd = std::chrono::high_resolution_clock::now();
         auto beforeDuration = std::chrono::duration_cast<std::chrono::milliseconds>(beforeTuningEnd - beforeTuningBegin).count();
 
-        std::vector<cltune::PublicTunerResult> results = basicTuner->Tune();
+        std::vector<cltune::PublicTunerResult> results = basicTuner->TuneAll();
 
         auto afterTuningBegin = std::chrono::high_resolution_clock::now();
         configurators.at(temporaryId).second->afterTuning();
@@ -303,7 +303,7 @@ namespace cltune
     // ==============================================================================================================================================
     // Output methods
 
-    void ExtendedTuner::PrintToScreen(const size_t id)
+    void ExtendedTuner::PrintToScreen(const size_t id) const
     {
         if (results.size() < 1)
         {
@@ -337,7 +337,7 @@ namespace cltune
         std::cout << extHeader << extTotalDuration << best.beforeDuration + best.afterDuration + best.basicResult.time << extMs << std::endl;
     }
 
-    void ExtendedTuner::PrintToScreen()
+    void ExtendedTuner::PrintToScreen() const
     {
         for (size_t i = 0; i < kernelCount; i++)
         {
@@ -348,7 +348,7 @@ namespace cltune
     // ==============================================================================================================================================
     // Private methods
 
-    size_t ExtendedTuner::getConfiguratorIndex(const size_t id)
+    size_t ExtendedTuner::getConfiguratorIndex(const size_t id) const
     {
         for (size_t i = 0; i < configurators.size(); i++)
         {
@@ -361,7 +361,7 @@ namespace cltune
         return -1;
     }
 
-    void ExtendedTuner::printKernelParameters(const cltune::PublicTunerResult& result)
+    void ExtendedTuner::printKernelParameters(const cltune::PublicTunerResult& result) const
     {
         for (auto& param : result.parameter_values)
         {

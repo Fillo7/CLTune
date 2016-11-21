@@ -84,8 +84,12 @@ class TunerImpl {
   explicit TunerImpl(size_t platform_id, size_t device_id);
   ~TunerImpl();
 
-  // Starts the tuning process. This function is called directly from the Tuner API.
-  std::vector<PublicTunerResult> Tune();
+  // Starts the tuning process.
+  std::vector<PublicTunerResult> TuneAll();
+
+  // Starts the tuning process for single kernel.
+  std::vector<PublicTunerResult> TuneSingleKernel(const size_t id, const bool test_reference,
+                                                  const bool clear_previous_results);
 
   // Compiles and runs a kernel and returns the elapsed time
   TunerResult RunKernel(const std::string &source, const KernelInfo &kernel,

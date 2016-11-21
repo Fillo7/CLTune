@@ -370,8 +370,16 @@ void Tuner::OutputSearchLog(const std::string &filename) {
 // =================================================================================================
 
 // Starts the tuning process. See the TunerImpl's implemenation for details
-std::vector<PublicTunerResult> Tuner::Tune() {
-  return pimpl->Tune();
+std::vector<PublicTunerResult> Tuner::TuneAll() {
+  return pimpl->TuneAll();
+}
+
+// =================================================================================================
+
+// Starts the tuning process for single kernel.
+std::vector<PublicTunerResult> Tuner::TuneSingleKernel(const size_t id) {
+  if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
+  return pimpl->TuneSingleKernel(id, true, true);
 }
 
 // =================================================================================================
