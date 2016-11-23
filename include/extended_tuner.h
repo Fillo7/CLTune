@@ -108,16 +108,16 @@ public:
     // Sets the tuner configurator for specified kernel. There can be up to one configurator per kernel.
     void PUBLIC_API setConfigurator(const size_t id, UniqueConfigurator configurator);
 
-    // Prints tuning result of kernel with given id to screen.
+    // Prints tuning results of kernel with given id to screen.
     void PUBLIC_API printToScreen(const size_t id) const;
 
     // Prints tuning results of all kernels to screen.
     void PUBLIC_API printToScreen() const;
 
-    // Prints tuning result of kernel with given id to file.
+    // Prints tuning results of kernel with given id to file.
     void PUBLIC_API printToFile(const size_t id, const std::string &filename) const;
 
-    // Prints tuning result of kernel with given id to file.
+    // Prints tuning results of all kernels to file.
     void PUBLIC_API printToFile(const std::string &filename) const;
 
 private:
@@ -140,6 +140,9 @@ private:
     // Prints kernel info from result to given output stream.
     void printKernelInfo(const cltune::PublicTunerResult& result, std::ostream& out) const;
 
+    // Helper method for printing results to screen, file, etc.
+    void printResults(const size_t id, std::ostream& out) const;
+
     // Stores tuning result for given kernel without configurator.
     void storeTunerResult(const size_t id, const cltune::PublicTunerResult& result);
 
@@ -156,9 +159,9 @@ private:
     const std::string extTotalDuration = "Total duration: ";
     const std::string extPrintingResultsToScreen = "Printing tuning results to screen for kernel with id: ";
     const std::string extPrintingResultsToFile = "Printing tuning results to file for kernel with id: ";
-    const std::string extNoResults = "No results available.";
-    const std::string extNoFileOpen = "Unable to open output file.";
-    const std::string extMs = "ms.";
+    const std::string extNoResults = "No results available";
+    const std::string extNoFileOpen = "Unable to open output file";
+    const std::string extMs = "ms";
 };
 
 } // namespace cltune
