@@ -137,8 +137,8 @@ private:
     // Checks if configurator exists for given kernel. Returns its position inside vector if it does, returns -1 otherwise.
     size_t getConfiguratorIndex(const size_t kernelId) const;
 
-    // Prints kernel parameters and their values for given result.
-    void printKernelParameters(const cltune::PublicTunerResult& result) const;
+    // Prints kernel info from result to given output stream.
+    void printKernelInfo(const cltune::PublicTunerResult& result, std::ostream& out) const;
 
     // Stores tuning result for given kernel without configurator.
     void storeTunerResult(const size_t id, const cltune::PublicTunerResult& result);
@@ -154,6 +154,10 @@ private:
     const std::string extFastestKernelDuration = "Duration of the fastest kernel execution: ";
     const std::string extKernelParameters = "Parameters of the fastest kernel: ";
     const std::string extTotalDuration = "Total duration: ";
+    const std::string extPrintingResultsToScreen = "Printing tuning results to screen for kernel with id: ";
+    const std::string extPrintingResultsToFile = "Printing tuning results to file for kernel with id: ";
+    const std::string extNoResults = "No results available.";
+    const std::string extNoFileOpen = "Unable to open output file.";
     const std::string extMs = "ms.";
 };
 

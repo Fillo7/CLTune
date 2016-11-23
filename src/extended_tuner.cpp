@@ -1,6 +1,7 @@
 #include <chrono>
 #include <complex>
 #include <iostream>
+#include <fstream>
 
 #include "CL/cl.h"
 #include "extended_tuner.h"
@@ -329,19 +330,19 @@ namespace cltune
     {
         if (results.size() < 1)
         {
-            std::cout << extHeader << "No results available" << std::endl;
+            std::cerr << extHeader << extNoResults << std::endl;
             return;
         }
-        std::cout << extHeader << "Printing tuning results for kernel with id: " << id << std::endl;
+        std::cout << extHeader << extPrintingResultsToScreen << id << std::endl;
 
         ExtendedTunerResult best;
         best.basicResult.time = std::numeric_limits<float>::max();
         for (auto& result : results)
         {
-            if (result.first == id)
+            if (result.first == id && result.second.basicResult.status)
             {
                 std::cout << extHeader << extKernelDuration << result.second.basicResult.time << extMs << std::endl;
-                printKernelParameters(result.second.basicResult);
+                printKernelInfo(result.second.basicResult, std::cout);
 
                 if (best.basicResult.time > result.second.basicResult.time)
                 {
@@ -354,16 +355,12 @@ namespace cltune
             }
         }
 
-        if (best.hasConfigurator)
-        {
-            std::cout << extHeader << extBeforeDuration << best.beforeDuration << extMs << std::endl;
-        }
-        
-        std::cout << extHeader << extFastestKernelDuration << best.basicResult.time << extMs << std::endl;
-        printKernelParameters(best.basicResult);
+        std::cout << std::endl << extHeader << extFastestKernelDuration << best.basicResult.time << extMs << std::endl;
+        printKernelInfo(best.basicResult, std::cout);
 
         if (best.hasConfigurator)
         {
+            std::cout << extHeader << extBeforeDuration << best.beforeDuration << extMs << std::endl;
             std::cout << extHeader << extAfterDuration << best.afterDuration << extMs << std::endl;
             std::cout << extHeader << extTotalDuration << best.beforeDuration + best.afterDuration + best.basicResult.time << extMs << std::endl;
         }
@@ -379,7 +376,52 @@ namespace cltune
 
     void ExtendedTuner::printToFile(const size_t id, const std::string &filename) const
     {
-        std::cerr << extHeader << "Printing to file is not supported yet." << std::endl;
+        std::ofstream outputFile(filename);
+
+        if (!outputFile.is_open())
+        {
+            std::cerr << extHeader << extNoFileOpen << std::endl;
+            return;
+        }
+
+        if (results.size() < 1)
+        {
+            std::cerr << extHeader << extNoResults << std::endl;
+            return;
+        }
+        std::cout << extHeader << extPrintingResultsToFile << id << std::endl;
+        
+        ExtendedTunerResult best;
+        best.basicResult.time = std::numeric_limits<float>::max();
+        for (auto& result : results)
+        {
+            if (result.first == id && result.second.basicResult.status)
+            {
+                outputFile << extKernelDuration << result.second.basicResult.time << extMs << std::endl;
+                printKernelInfo(result.second.basicResult, outputFile);
+
+                if (best.basicResult.time > result.second.basicResult.time)
+                {
+                    // Copy all attributes, only the relevant ones will be used
+                    best.hasConfigurator = result.second.hasConfigurator;
+                    best.beforeDuration = result.second.beforeDuration;
+                    best.afterDuration = result.second.afterDuration;
+                    best.basicResult = result.second.basicResult;
+                }
+            }
+        }
+
+        outputFile << std::endl << extFastestKernelDuration << best.basicResult.time << extMs << std::endl;
+        printKernelInfo(best.basicResult, outputFile);
+
+        if (best.hasConfigurator)
+        {
+            outputFile << extBeforeDuration << best.beforeDuration << extMs << std::endl;
+            outputFile << extAfterDuration << best.afterDuration << extMs << std::endl;
+            outputFile << extTotalDuration << best.beforeDuration + best.afterDuration + best.basicResult.time << extMs << std::endl;
+        }
+
+        outputFile.close();
     }
 
     void ExtendedTuner::printToFile(const std::string &filename) const
@@ -406,13 +448,14 @@ namespace cltune
         return -1;
     }
 
-    void ExtendedTuner::printKernelParameters(const cltune::PublicTunerResult& result) const
+    void ExtendedTuner::printKernelInfo(const cltune::PublicTunerResult& result, std::ostream& out) const
     {
+        out << result.kernel_name << " " << result.threads << " ";
         for (auto& param : result.parameter_values)
         {
-            std::cout << "[" << param.first << ": " << param.second << "] ";
+            out << "[" << param.first << ": " << param.second << "] ";
         }
-        std::cout << std::endl;
+        out << std::endl;
     }
 
     void ExtendedTuner::storeTunerResult(const size_t id, const cltune::PublicTunerResult& result)
