@@ -85,6 +85,9 @@ public:
     void PUBLIC_API usePSO(const double fraction, const size_t swarmSize, const double influenceGlobal, const double influenceLocal,
                            const double influenceRandom);
 
+    // Sets the tuner configurator for specified kernel. There can be up to one configurator per kernel.
+    void PUBLIC_API setConfigurator(const size_t id, UniqueConfigurator configurator);
+
     // Uses chosen technique for results comparison. Currently available techniques are absolute difference and side by side comparison.
     void PUBLIC_API chooseVerificationTechnique(const VerificationTechnique technique);
     void PUBLIC_API chooseVerificationTechnique(const VerificationTechnique technique, const double toleranceTreshold);
@@ -104,9 +107,6 @@ public:
 
     // Starts tuning process for all kernels using the provided configurator.
     void PUBLIC_API tuneAllKernels();
-
-    // Sets the tuner configurator for specified kernel. There can be up to one configurator per kernel.
-    void PUBLIC_API setConfigurator(const size_t id, UniqueConfigurator configurator);
 
     // Prints tuning results of kernel with given id to screen.
     void PUBLIC_API printToScreen(const size_t id) const;

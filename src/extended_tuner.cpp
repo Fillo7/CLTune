@@ -13,7 +13,7 @@ namespace cltune
     using double2 = std::complex<double>;
 
     // ==============================================================================================================================================
-    // Constructors and destructors
+    // Constructors and destructor
 
     ExtendedTuner::ExtendedTuner(size_t platformId, size_t deviceId):
         kernelCount(0),
@@ -212,6 +212,19 @@ namespace cltune
         basicTuner->UsePSO(fraction, swarmSize, influenceGlobal, influenceLocal, influenceRandom);
     }
 
+    void ExtendedTuner::setConfigurator(const size_t id, UniqueConfigurator configurator)
+    {
+        size_t configuratorId = getConfiguratorIndex(id);
+
+        if (configuratorId != -1)
+        {
+            configurators.at(configuratorId).second = std::move(configurator); // Original object is destroyed
+            return;
+        }
+
+        configurators.push_back(std::make_pair(id, std::move(configurator)));
+    }
+
     void ExtendedTuner::chooseVerificationTechnique(const VerificationTechnique technique)
     {
         basicTuner->ChooseVerificationTechnique(technique);
@@ -308,19 +321,6 @@ namespace cltune
         {
             tuneSingleKernel(id);
         }
-    }
-
-    void ExtendedTuner::setConfigurator(const size_t id, UniqueConfigurator configurator)
-    {
-        size_t configuratorId = getConfiguratorIndex(id);
-        
-        if (configuratorId != -1)
-        {
-            configurators.at(configuratorId).second = std::move(configurator); // Original object is destroyed
-            return;
-        }
-
-        configurators.push_back(std::make_pair(id, std::move(configurator)));
     }
 
     // ==============================================================================================================================================
