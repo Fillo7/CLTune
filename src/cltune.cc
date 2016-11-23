@@ -370,14 +370,22 @@ void Tuner::OutputSearchLog(const std::string &filename) {
 // =================================================================================================
 
 // Starts the tuning process. See the TunerImpl's implemenation for details
-float Tuner::Tune() {
-  return pimpl->Tune();
+std::vector<PublicTunerResult> Tuner::TuneAllKernels() {
+  return pimpl->TuneAllKernels();
+}
+
+// =================================================================================================
+
+// Starts the tuning process for single kernel.
+std::vector<PublicTunerResult> Tuner::TuneSingleKernel(const size_t id) {
+  if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
+  return pimpl->TuneSingleKernel(id, true, true);
 }
 
 // =================================================================================================
 
 // Runs single kernel with given configuration and measures time.
-float Tuner::RunSingleKernel(const size_t id, const ParameterRange &parameter_values) {
+PublicTunerResult Tuner::RunSingleKernel(const size_t id, const ParameterRange &parameter_values) {
   if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
   return pimpl->RunSingleKernel(id, parameter_values);
 }
@@ -548,11 +556,6 @@ void Tuner::PrintToFile(const std::string &filename) const {
 // Set the flag to suppress output to true. Note that this cannot be undone.
 void Tuner::SuppressOutput() {
   pimpl->suppress_output_ = true;
-}
-
-// Sets the number of runs to average time measurements.
-void Tuner::SetNumRuns(const size_t num_runs) {
-  pimpl->num_runs_ = num_runs;
 }
 
 // =================================================================================================

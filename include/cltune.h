@@ -65,6 +65,15 @@ enum class Model { kLinearRegression, kNeuralNetwork };
 // Verification techniques
 enum class VerificationTechnique { AbsoluteDifference, SideBySide };
 
+// Structure that holds results of a tuning run
+struct PublicTunerResult {
+    std::string kernel_name;
+    float time;
+    size_t threads;
+    bool status;
+    ParameterRange parameter_values;
+};
+
 // The tuner class and its public API
 class Tuner {
  public:
@@ -152,11 +161,14 @@ class Tuner {
 
   // Starts the tuning process: compile all kernels and run them for each permutation of the tuning-
   // parameters. Note that this might take a while.
-  float PUBLIC_API Tune();
+  std::vector<PublicTunerResult> PUBLIC_API TuneAllKernels();
+
+  // Starts the tuning process, but this time only for specified kernel.
+  std::vector<PublicTunerResult> PUBLIC_API TuneSingleKernel(const size_t id);
 
   // Runs specified kernel with given configuration, measures the running time and prints result to screen.
   // Does not perform any tuning.
-  float PUBLIC_API RunSingleKernel(const size_t id, const ParameterRange &parameter_values);
+  PublicTunerResult PUBLIC_API RunSingleKernel(const size_t id, const ParameterRange &parameter_values);
 
   // Trains a machine learning model based on the search space explored so far. Then, all the
   // missing data-points are estimated based on this model. This is only useful if a fraction of
@@ -174,9 +186,6 @@ class Tuner {
 
   // Disables all further printing to stdout
   void PUBLIC_API SuppressOutput();
-
-  // Changes the number of times each kernel should be run. Used for averaging execution times.
-  void PUBLIC_API SetNumRuns(const size_t num_runs);
 
  private:
 

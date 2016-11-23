@@ -84,15 +84,22 @@ class TunerImpl {
   explicit TunerImpl(size_t platform_id, size_t device_id);
   ~TunerImpl();
 
-  // Starts the tuning process. This function is called directly from the Tuner API.
-  float Tune();
+  // Starts the tuning process.
+  std::vector<PublicTunerResult> TuneAllKernels();
+
+  // Starts the tuning process for single kernel.
+  std::vector<PublicTunerResult> TuneSingleKernel(const size_t id, const bool test_reference,
+                                                  const bool clear_previous_results);
 
   // Compiles and runs a kernel and returns the elapsed time
   TunerResult RunKernel(const std::string &source, const KernelInfo &kernel,
                         const size_t configuration_id, const size_t num_configurations);
 
   // Wrapper for the above method, which can be called from public API.
-  float RunSingleKernel(const size_t id, const ParameterRange &parameter_values);
+  PublicTunerResult RunSingleKernel(const size_t id, const ParameterRange &parameter_values);
+
+  // Converts TunerResult object to PublicTunerResult.
+  PublicTunerResult ConvertTuningResultToPublic(const TunerResult &result);
 
   // Copies an output buffer
   template <typename T> KernelInfo::MemArgument CopyOutputBuffer(KernelInfo::MemArgument &argument);
@@ -135,7 +142,7 @@ class TunerImpl {
   Queue queue_;
 
   // Settings
-  size_t num_runs_; // This is used for more-accurate execution time measurement
+  size_t num_runs_; // This was used for more-accurate execution time measurement, currently always one
   bool has_reference_;
   bool suppress_output_;
   bool output_search_process_;

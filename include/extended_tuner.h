@@ -2,6 +2,8 @@
 #define CLTUNE_EXTENDED_TUNER_H_
 
 #include <memory>
+#include <utility>
+#include <vector>
 
 #include "cltune.h"
 #include "tuner_configurator.h"
@@ -94,24 +96,65 @@ public:
     // based on this model. This is only useful if a fraction of the search space is explored, as is the case when doing random-search.
     void PUBLIC_API modelPrediction(const Model modelType, const float validationFraction, const size_t testTopXConfigurations);
 
-    // Prints the results of the tuning either to screen (stdout) or to a specific output-file. Returns the execution time in miliseconds.
-    double PUBLIC_API printToScreen() const;
-    void PUBLIC_API printFormatted() const;
-    void PUBLIC_API printJSON(const std::string& filename, const std::vector<std::pair<std::string, std::string>>& descriptions) const;
-    void PUBLIC_API printToFile(const std::string& filename) const;
-
     // Runs single kernel using the provided configurator.
-    PUBLIC_API void runSingleKernel(const size_t id, const ParameterRange& parameterValues);
+    void PUBLIC_API runSingleKernel(const size_t id, const ParameterRange& parameterValues);
 
-    // Starts tuning process using the provided configurator.
-    PUBLIC_API void tune();
+    // Starts tuning process for single kernel using the provided configurator.
+    void PUBLIC_API tuneSingleKernel(const size_t id);
 
-    // Sets the tuner configurator to specified custom configurator.
-    PUBLIC_API void setConfigurator(UniqueConfigurator configurator);
+    // Starts tuning process for all kernels using the provided configurator.
+    void PUBLIC_API tuneAllKernels();
+
+    // Sets the tuner configurator for specified kernel. There can be up to one configurator per kernel.
+    void PUBLIC_API setConfigurator(const size_t id, UniqueConfigurator configurator);
+
+    // Prints tuning result of kernel with given id to screen.
+    void PUBLIC_API printToScreen(const size_t id) const;
+
+    // Prints tuning results of all kernels to screen.
+    void PUBLIC_API printToScreen() const;
+
+    // Prints tuning result of kernel with given id to file.
+    void PUBLIC_API printToFile(const size_t id, const std::string &filename) const;
+
+    // Prints tuning result of kernel with given id to file.
+    void PUBLIC_API printToFile(const std::string &filename) const;
 
 private:
+    struct ExtendedTunerResult
+    {
+        cltune::PublicTunerResult basicResult;
+        bool hasConfigurator;
+        float beforeDuration;
+        float afterDuration;
+    };
+
+    size_t kernelCount;
     std::unique_ptr<Tuner> basicTuner;
-    UniqueConfigurator configurator;
+    std::vector<std::pair<size_t, UniqueConfigurator>> configurators;
+    std::vector<std::pair<size_t, ExtendedTunerResult>> results;
+
+    // Checks if configurator exists for given kernel. Returns its position inside vector if it does, returns -1 otherwise.
+    size_t getConfiguratorIndex(const size_t kernelId) const;
+
+    // Prints kernel parameters and their values for given result.
+    void printKernelParameters(const cltune::PublicTunerResult& result) const;
+
+    // Stores tuning result for given kernel without configurator.
+    void storeTunerResult(const size_t id, const cltune::PublicTunerResult& result);
+
+    // Stores tuning result for given kernel with configurator.
+    void storeTunerResult(const size_t id, const cltune::PublicTunerResult& result,
+                          const float beforeDuration, const float afterDuration);
+
+    const std::string extHeader = "[Extended Tuner] ";
+    const std::string extBeforeDuration = "Duration of beforeTuning() method: ";
+    const std::string extAfterDuration = "Duration of afterTuning() method: ";
+    const std::string extKernelDuration = "Duration of kernel execution: ";
+    const std::string extFastestKernelDuration = "Duration of the fastest kernel execution: ";
+    const std::string extKernelParameters = "Parameters of the fastest kernel: ";
+    const std::string extTotalDuration = "Total duration: ";
+    const std::string extMs = "ms.";
 };
 
 } // namespace cltune
