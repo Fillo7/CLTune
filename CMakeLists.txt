@@ -131,6 +131,7 @@ link_directories(${FRAMEWORK_LIBRARY_DIRS})
 # Gathers all source-files
 set(TUNER
     src/cltune.cc
+	src/extended_tuner.cpp
     src/tuner_impl.cc
     src/kernel_info.cc
     src/searcher.cc
@@ -156,16 +157,8 @@ install(FILES include/cltune.h DESTINATION include)
 if (SAMPLES)
 
   # Adds sample programs
-  add_executable(sample_simple samples/simple/simple.cc)
-  add_executable(sample_conv_simple samples/conv_simple/conv_simple.cc)
-  add_executable(sample_multiple_kernels samples/multiple_kernels/multiple_kernels.cc)
-  add_executable(sample_gemm samples/gemm/gemm.cc)
-  add_executable(sample_conv samples/conv/conv.cc)
-  target_link_libraries(sample_simple cltune ${FRAMEWORK_LIBRARIES} ${OpenMP_LIBRARY})
-  target_link_libraries(sample_conv_simple cltune ${FRAMEWORK_LIBRARIES} ${OpenMP_LIBRARY})
-  target_link_libraries(sample_multiple_kernels cltune ${FRAMEWORK_LIBRARIES} ${OpenMP_LIBRARY})
-  target_link_libraries(sample_gemm cltune ${FRAMEWORK_LIBRARIES} ${OpenMP_LIBRARY})
-  target_link_libraries(sample_conv cltune ${FRAMEWORK_LIBRARIES} ${OpenMP_LIBRARY})
+  add_executable(extended_basic samples/extended_basic/extended_basic.cpp)
+  target_link_libraries(extended_basic cltune ${FRAMEWORK_LIBRARIES} ${OpenMP_LIBRARY})
 
   # Note: these are not installed because they depend on their separate OpenCL kernel files
 endif()
