@@ -325,7 +325,7 @@ namespace cltune
     // ==============================================================================================================================================
     // Output methods
 
-    void ExtendedTuner::PrintToScreen(const size_t id) const
+    void ExtendedTuner::printToScreen(const size_t id) const
     {
         if (results.size() < 1)
         {
@@ -369,11 +369,24 @@ namespace cltune
         }
     }
 
-    void ExtendedTuner::PrintToScreen() const
+    void ExtendedTuner::printToScreen() const
     {
-        for (size_t i = 0; i < kernelCount; i++)
+        for (size_t id = 0; id < kernelCount; id++)
         {
-            PrintToScreen(i);
+            printToScreen(id);
+        }
+    }
+
+    void ExtendedTuner::printToFile(const size_t id, const std::string &filename) const
+    {
+        std::cerr << extHeader << "Printing to file is not supported yet." << std::endl;
+    }
+
+    void ExtendedTuner::printToFile(const std::string &filename) const
+    {
+        for (size_t id = 0; id < kernelCount; id++)
+        {
+            printToFile(id, filename);
         }
     }
 

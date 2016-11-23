@@ -24,15 +24,6 @@ using UniqueConfigurator = std::unique_ptr<TunerConfigurator>;
 class ExtendedTuner
 {
 public:
-    const std::string extHeader = "[Extended Tuner] ";
-    const std::string extBeforeDuration = "Duration of beforeTuning() method: ";
-    const std::string extAfterDuration = "Duration of afterTuning() method: ";
-    const std::string extKernelDuration = "Duration of kernel execution: ";
-    const std::string extFastestKernelDuration = "Duration of the fastest kernel execution: ";
-    const std::string extKernelParameters = "Parameters of the fastest kernel: ";
-    const std::string extTotalDuration = "Total duration: ";
-    const std::string extMs = "ms.";
-
     // Initializes the extended tuner by providing platform id and device id.
     explicit PUBLIC_API ExtendedTuner(size_t platformId, size_t deviceId);
     
@@ -118,10 +109,16 @@ public:
     void PUBLIC_API setConfigurator(const size_t id, UniqueConfigurator configurator);
 
     // Prints tuning result of kernel with given id to screen.
-    void PUBLIC_API PrintToScreen(const size_t id) const;
+    void PUBLIC_API printToScreen(const size_t id) const;
 
     // Prints tuning results of all kernels to screen.
-    void PUBLIC_API PrintToScreen() const;
+    void PUBLIC_API printToScreen() const;
+
+    // Prints tuning result of kernel with given id to file.
+    void PUBLIC_API printToFile(const size_t id, const std::string &filename) const;
+
+    // Prints tuning result of kernel with given id to file.
+    void PUBLIC_API printToFile(const std::string &filename) const;
 
 private:
     struct ExtendedTunerResult
@@ -143,12 +140,21 @@ private:
     // Prints kernel parameters and their values for given result.
     void printKernelParameters(const cltune::PublicTunerResult& result) const;
 
-    // Stores tuning result for given kernel without configurator in results attribute.
+    // Stores tuning result for given kernel without configurator.
     void storeTunerResult(const size_t id, const cltune::PublicTunerResult& result);
 
-    // Stores tuning result for given kernel with configurator in results attribute.
+    // Stores tuning result for given kernel with configurator.
     void storeTunerResult(const size_t id, const cltune::PublicTunerResult& result,
-        const float beforeDuration, const float afterDuration);
+                          const float beforeDuration, const float afterDuration);
+
+    const std::string extHeader = "[Extended Tuner] ";
+    const std::string extBeforeDuration = "Duration of beforeTuning() method: ";
+    const std::string extAfterDuration = "Duration of afterTuning() method: ";
+    const std::string extKernelDuration = "Duration of kernel execution: ";
+    const std::string extFastestKernelDuration = "Duration of the fastest kernel execution: ";
+    const std::string extKernelParameters = "Parameters of the fastest kernel: ";
+    const std::string extTotalDuration = "Total duration: ";
+    const std::string extMs = "ms.";
 };
 
 } // namespace cltune
