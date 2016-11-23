@@ -370,8 +370,8 @@ void Tuner::OutputSearchLog(const std::string &filename) {
 // =================================================================================================
 
 // Starts the tuning process. See the TunerImpl's implemenation for details
-std::vector<PublicTunerResult> Tuner::TuneAll() {
-  return pimpl->TuneAll();
+std::vector<PublicTunerResult> Tuner::TuneAllKernels() {
+  return pimpl->TuneAllKernels();
 }
 
 // =================================================================================================

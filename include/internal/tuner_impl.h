@@ -85,7 +85,7 @@ class TunerImpl {
   ~TunerImpl();
 
   // Starts the tuning process.
-  std::vector<PublicTunerResult> TuneAll();
+  std::vector<PublicTunerResult> TuneAllKernels();
 
   // Starts the tuning process for single kernel.
   std::vector<PublicTunerResult> TuneSingleKernel(const size_t id, const bool test_reference,

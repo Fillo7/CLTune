@@ -108,8 +108,11 @@ public:
     // Runs single kernel using the provided configurator.
     void PUBLIC_API runSingleKernel(const size_t id, const ParameterRange& parameterValues);
 
-    // Starts tuning process using the provided configurator.
-    void PUBLIC_API tune();
+    // Starts tuning process for single kernel using the provided configurator.
+    void PUBLIC_API tuneSingleKernel(const size_t id);
+
+    // Starts tuning process for all kernels using the provided configurator.
+    void PUBLIC_API tuneAllKernels();
 
     // Sets the tuner configurator for specified kernel. There can be up to one configurator per kernel.
     void PUBLIC_API setConfigurator(const size_t id, UniqueConfigurator configurator);
@@ -124,6 +127,7 @@ private:
     struct ExtendedTunerResult
     {
         cltune::PublicTunerResult basicResult;
+        bool hasConfigurator;
         float beforeDuration;
         float afterDuration;
     };
@@ -134,14 +138,17 @@ private:
     std::vector<std::pair<size_t, ExtendedTunerResult>> results;
 
     // Checks if configurator exists for given kernel. Returns its position inside vector if it does, returns -1 otherwise.
-    size_t getConfiguratorIndex(const size_t id) const;
+    size_t getConfiguratorIndex(const size_t kernelId) const;
 
     // Prints kernel parameters and their values for given result.
     void printKernelParameters(const cltune::PublicTunerResult& result) const;
 
-    // Stores tuning result for given kernel in results attribute.
+    // Stores tuning result for given kernel without configurator in results attribute.
+    void storeTunerResult(const size_t id, const cltune::PublicTunerResult& result);
+
+    // Stores tuning result for given kernel with configurator in results attribute.
     void storeTunerResult(const size_t id, const cltune::PublicTunerResult& result,
-                          const float beforeTuningDuration, const float afterTuningDuration);
+        const float beforeDuration, const float afterDuration);
 };
 
 } // namespace cltune

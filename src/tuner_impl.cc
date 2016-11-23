@@ -151,7 +151,7 @@ TunerImpl::~TunerImpl() {
 // automatically verified with respect to this reference run). Next, all permutations of all tuning-
 // parameters are computed for each kernel and those kernels are run. Their timing-results are
 // collected and stored into the tuning_results_ vector.
-std::vector<PublicTunerResult> TunerImpl::TuneAll() {
+std::vector<PublicTunerResult> TunerImpl::TuneAllKernels() {
 
   // Runs the reference kernel if it is defined
   if (has_reference_) {
