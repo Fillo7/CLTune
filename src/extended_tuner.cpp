@@ -250,7 +250,7 @@ namespace cltune
 
     void ExtendedTuner::runSingleKernel(const size_t id, const ParameterRange& parameterValues)
     {
-        size_t configuratorIndex = getConfiguratorIndex(id);
+        /*size_t configuratorIndex = getConfiguratorIndex(id);
 
         auto beforeTuningBegin = std::chrono::high_resolution_clock::now();
         if (configuratorIndex >= 0)
@@ -258,23 +258,23 @@ namespace cltune
             configurators.at(configuratorIndex).second->beforeTuning();
         }
         auto beforeTuningEnd = std::chrono::high_resolution_clock::now();
-        auto beforeDuration = std::chrono::duration_cast<std::chrono::milliseconds>(beforeTuningEnd - beforeTuningBegin).count();
+        auto beforeDuration = std::chrono::duration_cast<std::chrono::milliseconds>(beforeTuningEnd - beforeTuningBegin).count();*/
 
         cltune::PublicTunerResult result = basicTuner->RunSingleKernel(id, parameterValues);
 
-        auto afterTuningBegin = std::chrono::high_resolution_clock::now();
+        /*auto afterTuningBegin = std::chrono::high_resolution_clock::now();
         if (configuratorIndex >= 0)
         {
             configurators.at(configuratorIndex).second->afterTuning();
         }
         auto afterTuningEnd = std::chrono::high_resolution_clock::now();
-        auto afterDuration = std::chrono::duration_cast<std::chrono::milliseconds>(afterTuningEnd - afterTuningBegin).count();
+        auto afterDuration = std::chrono::duration_cast<std::chrono::milliseconds>(afterTuningEnd - afterTuningBegin).count();*/
 
-        if (configuratorIndex >= 0)
+        /*if (configuratorIndex >= 0)
         {
             storeTunerResult(id, result, (float)beforeDuration, (float)afterDuration);
         }
-        else
+        else*/
         {
             storeTunerResult(id, result);
         }
@@ -282,7 +282,7 @@ namespace cltune
 
     void ExtendedTuner::tuneSingleKernel(const size_t id)
     {
-        size_t configuratorIndex = getConfiguratorIndex(id);
+        /*size_t configuratorIndex = getConfiguratorIndex(id);
 
         auto beforeTuningBegin = std::chrono::high_resolution_clock::now();
         if (configuratorIndex >= 0)
@@ -290,28 +290,38 @@ namespace cltune
             configurators.at(configuratorIndex).second->beforeTuning();
         }
         auto beforeTuningEnd = std::chrono::high_resolution_clock::now();
-        auto beforeDuration = std::chrono::duration_cast<std::chrono::milliseconds>(beforeTuningEnd - beforeTuningBegin).count();
+        auto beforeDuration = std::chrono::duration_cast<std::chrono::milliseconds>(beforeTuningEnd - beforeTuningBegin).count();*/
 
         std::vector<cltune::PublicTunerResult> results = basicTuner->TuneSingleKernel(id);
 
-        auto afterTuningBegin = std::chrono::high_resolution_clock::now();
+        /*auto afterTuningBegin = std::chrono::high_resolution_clock::now();
         if (configuratorIndex >= 0)
         {
             configurators.at(configuratorIndex).second->afterTuning();
         }
         auto afterTuningEnd = std::chrono::high_resolution_clock::now();
-        auto afterDuration = std::chrono::duration_cast<std::chrono::milliseconds>(afterTuningEnd - afterTuningBegin).count();
+        auto afterDuration = std::chrono::duration_cast<std::chrono::milliseconds>(afterTuningEnd - afterTuningBegin).count();*/
 
         for (auto& result : results)
         {
-            if (configuratorIndex >= 0)
+            /*if (configuratorIndex >= 0)
             {
                 storeTunerResult(id, result, (float)beforeDuration, (float)afterDuration);
             }
-            else
+            else*/
             {
                 storeTunerResult(id, result);
             }
+        }
+    }
+
+    void ExtendedTuner::tuneSingleKernelCustomized(const size_t id)
+    {
+        size_t configuratorIndex = getConfiguratorIndex(id);
+
+        if (configuratorIndex >= 0)
+        {
+            configurators.at(configuratorIndex).second->extendedComputation();
         }
     }
 
@@ -394,7 +404,7 @@ namespace cltune
     {
         if (results.size() < 1)
         {
-            out << extHeader << extNoResults << std::endl;
+            out << extNoResults << std::endl;
             return;
         }
 
@@ -404,7 +414,7 @@ namespace cltune
         {
             if (result.first == id && result.second.basicResult.status)
             {
-                out << extHeader << extKernelDuration << result.second.basicResult.time << extMs << std::endl;
+                out << extKernelDuration << result.second.basicResult.time << extMs << std::endl;
                 printKernelInfo(result.second.basicResult, out);
 
                 if (best.basicResult.time > result.second.basicResult.time)
@@ -418,14 +428,14 @@ namespace cltune
             }
         }
 
-        out << std::endl << extHeader << extFastestKernelDuration << best.basicResult.time << extMs << std::endl;
+        out << std::endl << extFastestKernelDuration << best.basicResult.time << extMs << std::endl;
         printKernelInfo(best.basicResult, out);
 
         if (best.hasConfigurator)
         {
-            out << extHeader << extBeforeDuration << best.beforeDuration << extMs << std::endl;
-            out << extHeader << extAfterDuration << best.afterDuration << extMs << std::endl;
-            out << extHeader << extTotalDuration << best.beforeDuration + best.afterDuration + best.basicResult.time << extMs << std::endl;
+            out << extBeforeDuration << best.beforeDuration << extMs << std::endl;
+            out << extAfterDuration << best.afterDuration << extMs << std::endl;
+            out << extTotalDuration << best.beforeDuration + best.afterDuration + best.basicResult.time << extMs << std::endl;
         }
     }
 

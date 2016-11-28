@@ -131,7 +131,7 @@ link_directories(${FRAMEWORK_LIBRARY_DIRS})
 # Gathers all source-files
 set(TUNER
     src/cltune.cc
-	src/extended_tuner.cpp
+    src/extended_tuner.cpp
     src/tuner_impl.cc
     src/kernel_info.cc
     src/searcher.cc

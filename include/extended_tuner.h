@@ -99,13 +99,16 @@ public:
     // based on this model. This is only useful if a fraction of the search space is explored, as is the case when doing random-search.
     void PUBLIC_API modelPrediction(const Model modelType, const float validationFraction, const size_t testTopXConfigurations);
 
-    // Runs single kernel using the provided configurator.
+    // Runs single kernel.
     void PUBLIC_API runSingleKernel(const size_t id, const ParameterRange& parameterValues);
 
-    // Starts tuning process for single kernel using the provided configurator.
+    // Starts tuning process for single kernel.
     void PUBLIC_API tuneSingleKernel(const size_t id);
 
-    // Starts tuning process for all kernels using the provided configurator.
+    // Starts tuning process for single kernel using the provided configurator.
+    void PUBLIC_API tuneSingleKernelCustomized(const size_t id);
+
+    // Starts tuning process for all kernels.
     void PUBLIC_API tuneAllKernels();
 
     // Prints tuning results of kernel with given id to screen.
