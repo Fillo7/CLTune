@@ -11,10 +11,11 @@ public:
     virtual ~TunerConfigurator() {}
 
     // Method which is executed in extended tuner to control tuning process and oversee kernel execution.
+    // Needs to launch the kernel using specified configuration.
     // May compute additional data on CPU, which is later used during kernel execution.
     // May do additional operations on output provided by kernel execution.
     // Its running time is measured and added to kernel execution time.
-    virtual void extendedComputation() = 0;
+    virtual void customizedComputation() = 0;
 };
 
 } // namespace cltune

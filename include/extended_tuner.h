@@ -118,10 +118,10 @@ public:
     void PUBLIC_API printToScreen() const;
 
     // Prints tuning results of kernel with given id to file.
-    void PUBLIC_API printToFile(const size_t id, const std::string &filename) const;
+    void PUBLIC_API printToFile(const size_t id, const std::string& filename) const;
 
     // Prints tuning results of all kernels to file.
-    void PUBLIC_API printToFile(const std::string &filename) const;
+    void PUBLIC_API printToFile(const std::string& filename) const;
 
 private:
     struct ExtendedTunerResult

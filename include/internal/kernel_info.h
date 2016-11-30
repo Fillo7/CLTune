@@ -125,7 +125,7 @@ class KernelInfo {
 
   // Exception of the KernelInfo class
   class Exception : public std::runtime_error {
-   public:
+  public:
     Exception(const std::string &message): std::runtime_error(message) { }
   };
 

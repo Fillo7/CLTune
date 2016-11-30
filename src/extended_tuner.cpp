@@ -319,10 +319,17 @@ namespace cltune
     {
         size_t configuratorIndex = getConfiguratorIndex(id);
 
-        if (configuratorIndex >= 0)
+        if (configuratorIndex < 0)
         {
-            configurators.at(configuratorIndex).second->extendedComputation();
+            throw std::runtime_error("Specified kernel has no configurator.");
         }
+
+        auto begin = std::chrono::high_resolution_clock::now();
+
+        configurators.at(configuratorIndex).second->customizedComputation();
+
+        auto end = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
     }
 
     void ExtendedTuner::tuneAllKernels()
@@ -350,7 +357,7 @@ namespace cltune
         }
     }
 
-    void ExtendedTuner::printToFile(const size_t id, const std::string &filename) const
+    void ExtendedTuner::printToFile(const size_t id, const std::string& filename) const
     {
         std::ofstream outputFile(filename);
 
@@ -366,7 +373,7 @@ namespace cltune
         outputFile.close();
     }
 
-    void ExtendedTuner::printToFile(const std::string &filename) const
+    void ExtendedTuner::printToFile(const std::string& filename) const
     {
         for (size_t id = 0; id < kernelCount; id++)
         {
