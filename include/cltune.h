@@ -152,7 +152,6 @@ class Tuner {
 
   // Uses chosen technique for results comparison. Currently available techniques are absolute
   // difference and side by side comparison.
-  void PUBLIC_API ChooseVerificationTechnique(const VerificationTechnique technique);
   void PUBLIC_API ChooseVerificationTechnique(const VerificationTechnique technique,
                                               const double tolerance_treshold);
 

@@ -350,10 +350,6 @@ void Tuner::UsePSO(const double fraction, const size_t swarm_size, const double 
 }
 
 // Choose verification technique.
-void Tuner::ChooseVerificationTechnique(const VerificationTechnique technique) {
-  pimpl->verification_technique_ = technique;
-}
-
 void Tuner::ChooseVerificationTechnique(const VerificationTechnique technique,
                                         const double tolerance_treshold) {
   if (tolerance_treshold < 0.0) { throw std::runtime_error("Invalid tolerance treshold"); }

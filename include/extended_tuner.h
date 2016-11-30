@@ -89,7 +89,6 @@ public:
     void PUBLIC_API setConfigurator(const size_t id, UniqueConfigurator configurator);
 
     // Uses chosen technique for results comparison. Currently available techniques are absolute difference and side by side comparison.
-    void PUBLIC_API chooseVerificationTechnique(const VerificationTechnique technique);
     void PUBLIC_API chooseVerificationTechnique(const VerificationTechnique technique, const double toleranceTreshold);
 
     // Outputs the search process to a file

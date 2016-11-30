@@ -50,6 +50,10 @@
 
 namespace cltune {
 // =================================================================================================
+  
+// Forward declaration of searcher class, cannot be included directly because it would generate
+// cyclical header inclusion
+  class Searcher;
 
 // Shorthands for complex data-types
   using float2 = std::complex<float>; // cl_float2;
@@ -139,6 +143,7 @@ class KernelInfo {
   std::vector<Parameter> parameters() const { return parameters_; }
   IterationsModifier iterations() const { return iterations_; }
   size_t num_current_iterations() const { return num_current_iterations_; }
+  std::shared_ptr<Searcher> searcher() { return searcher_; }
   IntRange global_base() const { return global_base_; }
   IntRange local_base() const { return local_base_; }
   IntRange global() const { return global_; }
@@ -197,6 +202,13 @@ class KernelInfo {
   // The result is stored as a member variable.
   void SetConfigurations();
 
+  // Methods that set searcher of the kernel.
+  void UseFullSearch();
+  void UseRandomSearch(const double fraction);
+  void UseAnnealing(const double fraction, const double max_temperature);
+  void UsePSO(const double fraction, const size_t swarm_size, const double influence_global,
+      const double influence_local, const double influence_random);
+
   // Methods that add a new argument to the kernel.
   void AddArgumentInput(const MemArgument &argument);
   void AddArgumentOutput(const MemArgument &argument);
@@ -226,6 +238,7 @@ class KernelInfo {
   LocalMemory local_memory_;
   IterationsModifier iterations_;
   size_t num_current_iterations_;
+  std::shared_ptr<Searcher> searcher_;
 
   Device device_;
 
