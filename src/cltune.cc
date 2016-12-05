@@ -321,32 +321,29 @@ template <> void PUBLIC_API Tuner::AddArgumentScalarReference<double2>(const dou
 // =================================================================================================
 
 // Use full search as a search strategy. This is the default method.
-void Tuner::UseFullSearch() {
-  pimpl->search_method_ = SearchMethod::FullSearch;
+void Tuner::UseFullSearch(const size_t id) {
+  if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
+  pimpl->kernels_[id].UseFullSearch();
 }
 
 // Use random search as a search strategy.
-void Tuner::UseRandomSearch(const double fraction) {
-  pimpl->search_method_ = SearchMethod::RandomSearch;
-  pimpl->search_args_.push_back(fraction);
+void Tuner::UseRandomSearch(const size_t id, const double fraction) {
+  if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
+  pimpl->kernels_[id].UseRandomSearch(fraction);
 }
 
 // Use simulated annealing as a search strategy.
-void Tuner::UseAnnealing(const double fraction, const double max_temperature) {
-  pimpl->search_method_ = SearchMethod::Annealing;
-  pimpl->search_args_.push_back(fraction);
-  pimpl->search_args_.push_back(max_temperature);
+void Tuner::UseAnnealing(const size_t id, const double fraction, const double max_temperature) {
+  if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
+  pimpl->kernels_[id].UseAnnealing(fraction, max_temperature);
 }
 
 // Use PSO as a search strategy.
-void Tuner::UsePSO(const double fraction, const size_t swarm_size, const double influence_global,
-                   const double influence_local, const double influence_random) {
-  pimpl->search_method_ = SearchMethod::PSO;
-  pimpl->search_args_.push_back(fraction);
-  pimpl->search_args_.push_back(static_cast<double>(swarm_size));
-  pimpl->search_args_.push_back(influence_global);
-  pimpl->search_args_.push_back(influence_local);
-  pimpl->search_args_.push_back(influence_random);
+void Tuner::UsePSO(const size_t id, const double fraction, const size_t swarm_size,
+                   const double influence_global, const double influence_local,
+                   const double influence_random) {
+  if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
+  pimpl->kernels_[id].UsePSO(fraction, swarm_size, influence_global, influence_local, influence_random);
 }
 
 // Choose verification technique.

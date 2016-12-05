@@ -51,13 +51,12 @@
 namespace cltune {
 // =================================================================================================
   
-// Forward declaration of searcher class, cannot be included directly because it would generate
-// cyclical header inclusion
-  class Searcher;
+// Forward declaration of searcher class
+class Searcher;
 
 // Shorthands for complex data-types
-  using float2 = std::complex<float>; // cl_float2;
-  using double2 = std::complex<double>; // cl_double2;
+using float2 = std::complex<float>; // cl_float2;
+using double2 = std::complex<double>; // cl_double2;
 
 // Raw device buffer
 #if USE_OPENCL
@@ -143,7 +142,8 @@ class KernelInfo {
   std::vector<Parameter> parameters() const { return parameters_; }
   IterationsModifier iterations() const { return iterations_; }
   size_t num_current_iterations() const { return num_current_iterations_; }
-  std::shared_ptr<Searcher> searcher() { return searcher_; }
+  SearchMethod search_method() const { return search_method_; }
+  std::vector<double> search_args() const { return search_args_; }
   IntRange global_base() const { return global_base_; }
   IntRange local_base() const { return local_base_; }
   IntRange global() const { return global_; }
@@ -238,7 +238,8 @@ class KernelInfo {
   LocalMemory local_memory_;
   IterationsModifier iterations_;
   size_t num_current_iterations_;
-  std::shared_ptr<Searcher> searcher_;
+  SearchMethod search_method_;
+  std::vector<double> search_args_;
 
   Device device_;
 

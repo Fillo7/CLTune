@@ -51,7 +51,8 @@ KernelInfo::KernelInfo(const std::string name, const std::string source, const D
   global_(), local_(),
   iterations_(IterationsModifier{ std::vector<size_t>{1}, std::string{""} }),
   num_current_iterations_(1),
-  searcher_(nullptr),
+  search_method_(SearchMethod::FullSearch),
+  search_args_(),
   argument_counter_(0),
   thread_size_modifiers_() {
 }
@@ -187,11 +188,6 @@ void KernelInfo::SetNumCurrentIterations(const Configuration &config) {
 void KernelInfo::SetConfigurations() {
   auto config = Configuration(parameters_.size());
   PopulateConfigurations(0, config);
-
-  // Set default searcher to FullSearch.
-  if (searcher_ == nullptr) {
-    searcher_.reset(new FullSearch{ configurations() });
-  }
 }
 
 // Iterates recursively over all permutations of the user-defined parameters. This code creates
@@ -275,21 +271,31 @@ inline bool KernelInfo::ValidConfiguration(const Configuration &config) {
 
 // Methods that set searcher of the kernel.
 void KernelInfo::UseFullSearch() {
-  searcher_.reset(new FullSearch{ configurations() });
+  search_method_ = SearchMethod::FullSearch;
 }
 
 void KernelInfo::UseRandomSearch(const double fraction) {
-  searcher_.reset(new RandomSearch{ configurations(), fraction });
+  search_method_ = SearchMethod::RandomSearch;
+  search_args_.clear();
+  search_args_.push_back(fraction);
 }
 
 void KernelInfo::UseAnnealing(const double fraction, const double max_temperature) {
-  searcher_.reset(new Annealing{ configurations(), fraction, max_temperature });
+  search_method_ = SearchMethod::Annealing;
+  search_args_.clear();
+  search_args_.push_back(fraction);
+  search_args_.push_back(max_temperature);
 }
 
 void KernelInfo::UsePSO(const double fraction, const size_t swarm_size, const double influence_global,
                         const double influence_local, const double influence_random) {
-  searcher_.reset(new PSO{ configurations(), parameters(), fraction, swarm_size, influence_global,
-                           influence_local, influence_random });
+  search_method_ = SearchMethod::PSO;
+  search_args_.clear();
+  search_args_.push_back(fraction);
+  search_args_.push_back(swarm_size);
+  search_args_.push_back(influence_global);
+  search_args_.push_back(influence_local);
+  search_args_.push_back(influence_random);
 }
 
 // =================================================================================================

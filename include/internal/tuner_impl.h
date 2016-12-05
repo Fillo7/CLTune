@@ -148,10 +148,6 @@ class TunerImpl {
   bool output_search_process_;
   std::string search_log_filename_;
 
-  // The search method and its arguments
-  SearchMethod search_method_;
-  std::vector<double> search_args_;
-
   // Verification technique settings
   VerificationTechnique verification_technique_;
   double tolerance_treshold_;

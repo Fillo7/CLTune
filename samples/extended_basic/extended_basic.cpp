@@ -108,10 +108,10 @@ int main(int argc, char** argv)
     tuner.addArgumentInputReference(b);
     tuner.addArgumentOutputReference(result);
 
-    tuner.chooseVerificationTechnique(cltune::VerificationTechnique::SideBySide);
+    tuner.chooseVerificationTechnique(cltune::VerificationTechnique::SideBySide, 1e-4);
     
     // Set the tuner configurator to newly created custom class
-    tuner.setConfigurator(kernelId, cltune::UniqueConfigurator(new ExampleConfigurator(tuner, kernelId)));
+    //tuner.setConfigurator(kernelId, cltune::UniqueConfigurator(new ExampleConfigurator(tuner, kernelId)));
 
     // Begin tuning process for all kernels
     tuner.tuneAllKernels();

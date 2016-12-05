@@ -191,25 +191,25 @@ namespace cltune
     // ==============================================================================================================================================
     // Additional settings methods
 
-    void ExtendedTuner::useFullSearch()
+    void ExtendedTuner::useFullSearch(const size_t id)
     {
-        basicTuner->UseFullSearch();
+        basicTuner->UseFullSearch(id);
     }
 
-    void ExtendedTuner::useRandomSearch(const double fraction)
+    void ExtendedTuner::useRandomSearch(const size_t id, const double fraction)
     {
-        basicTuner->UseRandomSearch(fraction);
+        basicTuner->UseRandomSearch(id, fraction);
     }
 
-    void ExtendedTuner::useAnnealing(const double fraction, const double maxTemperature)
+    void ExtendedTuner::useAnnealing(const size_t id, const double fraction, const double maxTemperature)
     {
-        basicTuner->UseAnnealing(fraction, maxTemperature);
+        basicTuner->UseAnnealing(id, fraction, maxTemperature);
     }
 
-    void ExtendedTuner::usePSO(const double fraction, const size_t swarmSize, const double influenceGlobal, const double influenceLocal,
-                               const double influenceRandom)
+    void ExtendedTuner::usePSO(const size_t id, const double fraction, const size_t swarmSize, const double influenceGlobal,
+                               const double influenceLocal, const double influenceRandom)
     {
-        basicTuner->UsePSO(fraction, swarmSize, influenceGlobal, influenceLocal, influenceRandom);
+        basicTuner->UsePSO(id, fraction, swarmSize, influenceGlobal, influenceLocal, influenceRandom);
     }
 
     void ExtendedTuner::setConfigurator(const size_t id, UniqueConfigurator configurator)
@@ -265,14 +265,15 @@ namespace cltune
         auto afterTuningEnd = std::chrono::high_resolution_clock::now();
         auto afterDuration = std::chrono::duration_cast<std::chrono::milliseconds>(afterTuningEnd - afterTuningBegin).count();*/
 
+        storeTunerResult(id, result);
         /*if (configuratorIndex >= 0)
         {
             storeTunerResult(id, result, (float)beforeDuration, (float)afterDuration);
         }
-        else*/
+        else
         {
             storeTunerResult(id, result);
-        }
+        }*/
     }
 
     void ExtendedTuner::tuneSingleKernel(const size_t id)
@@ -299,14 +300,15 @@ namespace cltune
 
         for (auto& result : results)
         {
+            storeTunerResult(id, result);
             /*if (configuratorIndex >= 0)
             {
                 storeTunerResult(id, result, (float)beforeDuration, (float)afterDuration);
             }
-            else*/
+            else
             {
                 storeTunerResult(id, result);
-            }
+            }*/
         }
     }
 

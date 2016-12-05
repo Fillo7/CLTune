@@ -79,10 +79,10 @@ public:
 
     // Configures a specific search method. The default search method is "FullSearch". These are implemented as separate functions since
     // they each take a different number of arguments.
-    void PUBLIC_API useFullSearch();
-    void PUBLIC_API useRandomSearch(const double fraction);
-    void PUBLIC_API useAnnealing(const double fraction, const double maxTemperature);
-    void PUBLIC_API usePSO(const double fraction, const size_t swarmSize, const double influenceGlobal, const double influenceLocal,
+    void PUBLIC_API useFullSearch(const size_t id);
+    void PUBLIC_API useRandomSearch(const size_t id, const double fraction);
+    void PUBLIC_API useAnnealing(const size_t id, const double fraction, const double maxTemperature);
+    void PUBLIC_API usePSO(const size_t id, const double fraction, const size_t swarmSize, const double influenceGlobal, const double influenceLocal,
                            const double influenceRandom);
 
     // Sets the tuner configurator for specified kernel. There can be up to one configurator per kernel.

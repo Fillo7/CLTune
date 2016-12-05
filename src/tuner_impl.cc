@@ -87,9 +87,7 @@ TunerImpl::TunerImpl():
     tolerance_treshold_(kMaxL2Norm),
     suppress_output_(false),
     output_search_process_(false),
-    search_log_filename_(std::string{}),
-    search_method_(SearchMethod::FullSearch),
-    search_args_(0) {
+    search_log_filename_(std::string{}) {
   if (!suppress_output_) {
     fprintf(stdout, "\n%s Initializing on platform 0 device 0\n", kMessageFull.c_str());
     auto opencl_version = device_.Version();
@@ -111,9 +109,7 @@ TunerImpl::TunerImpl(size_t platform_id, size_t device_id):
     tolerance_treshold_(kMaxL2Norm),
     suppress_output_(false),
     output_search_process_(false),
-    search_log_filename_(std::string{}),
-    search_method_(SearchMethod::FullSearch),
-    search_args_(0) {
+    search_log_filename_(std::string{}) {
   if (!suppress_output_) {
     fprintf(stdout, "\n%s Initializing on platform %zu device %zu\n",
             kMessageFull.c_str(), platform_id, device_id);
@@ -214,22 +210,25 @@ std::vector<PublicTunerResult> TunerImpl::TuneSingleKernel(const size_t id, cons
     #endif
     kernel.SetConfigurations();
     
+
     // Creates the selected search algorithm
     std::unique_ptr<Searcher> search;
-    switch (search_method_) {
+    
+    switch (kernel.search_method()) {
     case SearchMethod::FullSearch:
       search.reset(new FullSearch{ kernel.configurations() });
       break;
     case SearchMethod::RandomSearch:
-      search.reset(new RandomSearch{ kernel.configurations(), search_args_[0] });
+      search.reset(new RandomSearch{ kernel.configurations(), kernel.search_args().at(0) });
       break;
     case SearchMethod::Annealing:
-      search.reset(new Annealing{ kernel.configurations(), search_args_[0], search_args_[1] });
+      search.reset(new Annealing{ kernel.configurations(), kernel.search_args().at(0),
+                                  kernel.search_args().at(1) });
       break;
     case SearchMethod::PSO:
-      search.reset(new PSO{ kernel.configurations(), kernel.parameters(), search_args_[0],
-                            static_cast<size_t>(search_args_[1]), search_args_[2],
-                            search_args_[3], search_args_[4] });
+      search.reset(new PSO{ kernel.configurations(), kernel.parameters(), kernel.search_args().at(0),
+                            static_cast<size_t>(kernel.search_args().at(1)), kernel.search_args().at(2),
+                            kernel.search_args().at(3), kernel.search_args().at(4) });
       break;
     }
 

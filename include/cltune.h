@@ -142,13 +142,13 @@ class Tuner {
   template <typename T> void AddArgumentOutputReference(const std::vector<T> &source);
   template <typename T> void AddArgumentScalarReference(const T argument);
 
-  // Configures a specific search method. The default search method is "FullSearch". These are
-  // implemented as separate functions since they each take a different number of arguments.
-  void PUBLIC_API UseFullSearch();
-  void PUBLIC_API UseRandomSearch(const double fraction);
-  void PUBLIC_API UseAnnealing(const double fraction, const double max_temperature);
-  void PUBLIC_API UsePSO(const double fraction, const size_t swarm_size, const double influence_global,
-                         const double influence_local, const double influence_random);
+  // Configures a specific search method for given kernel. Default search method is full search.
+  void PUBLIC_API UseFullSearch(const size_t id);
+  void PUBLIC_API UseRandomSearch(const size_t id, const double fraction);
+  void PUBLIC_API UseAnnealing(const size_t id, const double fraction, const double max_temperature);
+  void PUBLIC_API UsePSO(const size_t id, const double fraction, const size_t swarm_size,
+                         const double influence_global, const double influence_local,
+                         const double influence_random);
 
   // Uses chosen technique for results comparison. Currently available techniques are absolute
   // difference and side by side comparison.
