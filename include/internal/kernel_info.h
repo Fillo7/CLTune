@@ -50,9 +50,6 @@
 
 namespace cltune {
 // =================================================================================================
-  
-// Forward declaration of searcher class
-class Searcher;
 
 // Shorthands for complex data-types
 using float2 = std::complex<float>; // cl_float2;

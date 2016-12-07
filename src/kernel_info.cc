@@ -27,10 +27,6 @@
 
 // The corresponding header file
 #include "internal/kernel_info.h"
-#include "internal/searchers/full_search.h"
-#include "internal/searchers/random_search.h"
-#include "internal/searchers/annealing.h"
-#include "internal/searchers/pso.h"
 
 #include <cassert>
 
@@ -52,7 +48,7 @@ KernelInfo::KernelInfo(const std::string name, const std::string source, const D
   iterations_(IterationsModifier{ std::vector<size_t>{1}, std::string{""} }),
   num_current_iterations_(1),
   search_method_(SearchMethod::FullSearch),
-  search_args_(),
+  search_args_(0),
   argument_counter_(0),
   thread_size_modifiers_() {
 }

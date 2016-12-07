@@ -7,37 +7,37 @@
 #include "extended_tuner.h"
 
 // Inline definition of example configurator class, which provides implementation of TunerConfigurator interface
-class ExampleConfigurator : public cltune::TunerConfigurator
+/*class ExampleConfigurator : public cltune::TunerConfigurator
 {
 public:
-    ExampleConfigurator() {}
+ExampleConfigurator() {}
 
-    ExampleConfigurator(cltune::ExtendedTuner& tuner, size_t kernelId):
-        kernelId(kernelId)
-    {
-        this->tuner = &tuner;
-    }
+ExampleConfigurator(cltune::ExtendedTuner& tuner, size_t kernelId):
+kernelId(kernelId)
+{
+this->tuner = &tuner;
+}
 
-    virtual void beforeTuning()
-    {
-        customBeforeTuning(4);
-    }
+virtual void beforeTuning()
+{
+customBeforeTuning(4);
+}
 
-    virtual void afterTuning()
-    {
-        std::cout << "afterTuning() method of example configurator is in progress..." << std::endl;
-    }
+virtual void afterTuning()
+{
+std::cout << "afterTuning() method of example configurator is in progress..." << std::endl;
+}
 
 private:
-    cltune::ExtendedTuner* tuner;
-    size_t kernelId;
+cltune::ExtendedTuner* tuner;
+size_t kernelId;
 
-    void customBeforeTuning(int customAttribute)
-    {
-        tuner->addArgumentScalar(kernelId, customAttribute);
-        std::cout << "Custom beforeTuning() method of example configurator is in progress. Custom attribute is being used: " << customAttribute << std::endl;
-    }
-};
+void customBeforeTuning(int customAttribute)
+{
+tuner->addArgumentScalar(kernelId, customAttribute);
+std::cout << "Custom beforeTuning() method of example configurator is in progress. Custom attribute is being used: " << customAttribute << std::endl;
+}
+};*/
 
 int main(int argc, char** argv)
 {
@@ -55,9 +55,9 @@ int main(int argc, char** argv)
     }
 
     // Declare constants
-    const char* MULTIRUN_KERNEL_NAME = "multirunKernel.cl";
-    const char* REFERENCE_KERNEL_NAME = "referenceKernel.cl";
     const float UPPER_INTERVAL_BOUNDARY = 1000.0f; // used for generating random test data
+    const std::string multiRunKernelName = std::string("multirunKernel.cl");
+    const std::string referenceKernelName = std::string("referenceKernel.cl");
 
     // Declare kernel parameters
     const int numberOfElements = 4096 * 4096;
@@ -80,11 +80,11 @@ int main(int argc, char** argv)
 
     // Kernel tuning section
     cltune::ExtendedTuner tuner(platformIndex, deviceIndex);
-    size_t kernelId = tuner.addKernel(std::vector<std::string>{ MULTIRUN_KERNEL_NAME }, "multirunKernel", ndRangeDimensions, workGroupDimensions);
-    
+    size_t kernelId = tuner.addKernel(std::vector<std::string> { multiRunKernelName }, "multirunKernel", ndRangeDimensions, workGroupDimensions);
+
     // Add parameter, which will specify the number of iterations the kernel will run through, multiple values are possible for purpose of autotuning
-    tuner.addParameter(kernelId, "VALID_MULTIRUNS", {1, 2, 4, 8});
-    
+    tuner.addParameter(kernelId, "VALID_MULTIRUNS", { 1, 2, 4, 8 });
+
     // This method simply ties the previously added parameter to the number of kernel iterations
     tuner.setMultirunKernelIterations(kernelId, "VALID_MULTIRUNS");
 
@@ -94,7 +94,7 @@ int main(int argc, char** argv)
     tuner.divGlobalSize(kernelId, { "VALID_MULTIRUNS", "ALWAYS_ONE" });
 
     // Reference kernel has to always run in single iteration
-    tuner.setReference(std::vector<std::string>{ REFERENCE_KERNEL_NAME }, "referenceKernel", ndRangeDimensions, workGroupDimensions);
+    tuner.setReference(std::vector<std::string>{ referenceKernelName }, "referenceKernel", ndRangeDimensions, workGroupDimensions);
 
     // Each kernel takes separate arguments
     tuner.addArgumentScalar(kernelId, 2.0f);
@@ -102,15 +102,20 @@ int main(int argc, char** argv)
     tuner.addArgumentInput(kernelId, b);
     tuner.addArgumentOutput(kernelId, result);
 
-    // Different method is used for adding arguments to reference kernel, output buffers for all kernels should have the same size so the results comparison is possible
+    // Different method is used for adding arguments to reference kernel, output buffers for all kernels should have the same size so the results
+    // comparison is possible
     tuner.addArgumentScalarReference(2.0f);
     tuner.addArgumentInputReference(a);
     tuner.addArgumentInputReference(b);
     tuner.addArgumentOutputReference(result);
 
+    // Explicitly choose full search option (this is here to show correct usage, full search is default option so calling this is not strictly necessary)
+    tuner.useFullSearch(kernelId);
+
+    // Choose verification technique and specify tolerance treshold
     tuner.chooseVerificationTechnique(cltune::VerificationTechnique::SideBySide, 1e-4);
-    
-    // Set the tuner configurator to newly created custom class
+
+    // Set the tuner configurator to newly created custom class (currently unusable)
     //tuner.setConfigurator(kernelId, cltune::UniqueConfigurator(new ExampleConfigurator(tuner, kernelId)));
 
     // Begin tuning process for all kernels
