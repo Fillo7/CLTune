@@ -56,8 +56,8 @@ int main(int argc, char** argv)
 
     // Declare constants
     const float UPPER_INTERVAL_BOUNDARY = 1000.0f; // used for generating random test data
-    const std::string multiRunKernelName = std::string("multirunKernel.cl");
-    const std::string referenceKernelName = std::string("referenceKernel.cl");
+    const std::string multiRunKernelName = std::string("extended_simple_multirun.cl");
+    const std::string referenceKernelName = std::string("extended_simple_reference.cl");
 
     // Declare kernel parameters
     const int numberOfElements = 4096 * 4096;
@@ -112,8 +112,8 @@ int main(int argc, char** argv)
     // Explicitly choose full search option (this is here to show correct usage, full search is default option so calling this is not strictly necessary)
     tuner.useFullSearch(kernelId);
 
-    // Choose verification technique and specify tolerance treshold
-    tuner.chooseVerificationTechnique(cltune::VerificationTechnique::SideBySide, 1e-4);
+    // Choose verification method and specify tolerance treshold
+    tuner.chooseVerificationMethod(cltune::VerificationMethod::SideBySide, 1e-4);
 
     // Set the tuner configurator to newly created custom class (currently unusable)
     //tuner.setConfigurator(kernelId, cltune::UniqueConfigurator(new ExampleConfigurator(tuner, kernelId)));

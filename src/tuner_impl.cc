@@ -496,7 +496,7 @@ PublicTunerResult TunerImpl::ConvertTuningResultToPublic(const TunerImpl::TunerR
   public_result.status = result.status;
 
   for (auto &parameter : result.configuration) {
-      public_result.parameter_values.push_back(std::make_pair(parameter.name, parameter.value));
+    public_result.parameter_values.push_back(std::make_pair(parameter.name, parameter.value));
   }
 
   return public_result;
@@ -520,12 +520,12 @@ std::unique_ptr<Searcher> TunerImpl::getSearcher(const size_t id) {
     break;
    case SearchMethod::Annealing:
     searcher.reset(new Annealing{ kernel.configurations(), kernel.search_args().at(0),
-                                kernel.search_args().at(1) });
+                                  kernel.search_args().at(1) });
     break;
    case SearchMethod::PSO:
     searcher.reset(new PSO{ kernel.configurations(), kernel.parameters(), kernel.search_args().at(0),
-                          static_cast<size_t>(kernel.search_args().at(1)), kernel.search_args().at(2),
-                          kernel.search_args().at(3), kernel.search_args().at(4) });
+                            static_cast<size_t>(kernel.search_args().at(1)), kernel.search_args().at(2),
+                            kernel.search_args().at(3), kernel.search_args().at(4) });
     break;
   }
 
@@ -548,12 +548,12 @@ void TunerImpl::initializeSearcher(const size_t id) {
     break;
    case SearchMethod::Annealing:
     kernel_searchers_.at(id).reset(new Annealing{ kernel.configurations(), kernel.search_args().at(0),
-                                kernel.search_args().at(1) });
+                                                  kernel.search_args().at(1) });
     break;
    case SearchMethod::PSO:
     kernel_searchers_.at(id).reset(new PSO{ kernel.configurations(), kernel.parameters(), kernel.search_args().at(0),
-                          static_cast<size_t>(kernel.search_args().at(1)), kernel.search_args().at(2),
-                          kernel.search_args().at(3), kernel.search_args().at(4) });
+                                            static_cast<size_t>(kernel.search_args().at(1)), kernel.search_args().at(2),
+                                            kernel.search_args().at(3), kernel.search_args().at(4) });
     break;
   }
 }

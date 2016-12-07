@@ -165,6 +165,19 @@ class Tuner {
   // Starts the tuning process, but this time only for specified kernel.
   std::vector<PublicTunerResult> PUBLIC_API TuneSingleKernel(const size_t id);
 
+  // Returns number of unique configurations for given kernel based on specified parameters and search method.
+  // This method should be used only if using RunSingleKernel() method.
+  size_t PUBLIC_API getNumConfigurations(const size_t id);
+
+  // Returns next configuration for given kernel based on search method.
+  // This method should be used only if using RunSingleKernel() method.
+  ParameterRange PUBLIC_API getNextConfiguration(const size_t id);
+
+  // This methods needs to be called after each getNextConfiguration() method, previous kernel running time
+  // should be provided.
+  // This method should be used only if using RunSingleKernel() method.
+  void PUBLIC_API updateKernelConfiguration(const size_t id, const float previous_running_time);
+
   // Runs specified kernel with given configuration, measures the running time and prints result to screen.
   // Does not perform any tuning.
   PublicTunerResult PUBLIC_API RunSingleKernel(const size_t id, const ParameterRange &parameter_values);

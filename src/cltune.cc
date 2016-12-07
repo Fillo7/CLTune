@@ -378,6 +378,35 @@ std::vector<PublicTunerResult> Tuner::TuneSingleKernel(const size_t id) {
 
 // =================================================================================================
 
+// Returns number of unique configurations for given kernel based on specified parameters and search method.
+size_t Tuner::getNumConfigurations(const size_t id) {
+  if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
+  return pimpl->getNumConfigurations(id);
+}
+
+// Returns next configuration for given kernel based on search method.
+ParameterRange Tuner::getNextConfiguration(const size_t id) {
+  if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
+
+  ParameterRange parameters;
+  KernelInfo::Configuration config = pimpl->getNextConfiguration(id);
+
+  for (auto& config_unit : config) {
+    parameters.push_back(std::make_pair(config_unit.name, config_unit.value));
+  }
+
+  return parameters;
+}
+
+// This methods needs to be called after each getNextConfiguration() method, previous kernel running time
+// should be provided.
+void Tuner::updateKernelConfiguration(const size_t id, const float previous_running_time) {
+  if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
+  pimpl->updateSearcher(id, previous_running_time);
+}
+
+// =================================================================================================
+
 // Runs single kernel with given configuration and measures time.
 PublicTunerResult Tuner::RunSingleKernel(const size_t id, const ParameterRange &parameter_values) {
   if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
