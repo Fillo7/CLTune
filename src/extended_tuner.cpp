@@ -225,9 +225,9 @@ namespace cltune
         configurators.push_back(std::make_pair(id, std::move(configurator)));
     }
 
-    void ExtendedTuner::chooseVerificationTechnique(const VerificationTechnique technique, const double toleranceTreshold)
+    void ExtendedTuner::chooseVerificationMethod(const VerificationMethod method, const double toleranceTreshold)
     {
-        basicTuner->ChooseVerificationTechnique(technique, toleranceTreshold);
+        basicTuner->ChooseVerificationMethod(method, toleranceTreshold);
     }
 
     void ExtendedTuner::outputSearchLog(const std::string& filename)

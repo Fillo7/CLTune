@@ -83,7 +83,7 @@ TunerImpl::TunerImpl():
     queue_(Queue(context_, device_)),
     num_runs_(size_t{1}),
     has_reference_(false),
-    verification_technique_(VerificationTechnique::AbsoluteDifference),
+    verification_method_(VerificationMethod::AbsoluteDifference),
     tolerance_treshold_(kMaxL2Norm),
     suppress_output_(false),
     output_search_process_(false),
@@ -105,7 +105,7 @@ TunerImpl::TunerImpl(size_t platform_id, size_t device_id):
     queue_(Queue(context_, device_)),
     num_runs_(size_t{1}),
     has_reference_(false),
-    verification_technique_(VerificationTechnique::AbsoluteDifference),
+    verification_method_(VerificationMethod::AbsoluteDifference),
     tolerance_treshold_(kMaxL2Norm),
     suppress_output_(false),
     output_search_process_(false),
@@ -161,11 +161,7 @@ PublicTunerResult TunerImpl::RunSingleKernel(const size_t id, const ParameterRan
     }
 
     // Adds the parameters to the source-code string as defines
-    auto source = std::string{};
-    for (auto &config : configuration) {
-      source += config.GetDefine();
-    }
-    source += kernel.source();
+    std::string source = getConfiguredKernelSource(id, configuration);
 
     // Updates the local range with the parameter values
     kernel.ComputeRanges(configuration);
@@ -538,6 +534,66 @@ std::unique_ptr<Searcher> TunerImpl::getSearcher(const size_t id) {
 
 // =================================================================================================
 
+// Initializes searcher of a given kernel.
+void TunerImpl::initializeSearcher(const size_t id) {
+  KernelInfo& kernel = kernels_.at(id);
+  kernel.SetConfigurations();
+
+  switch (kernel.search_method()) {
+   case SearchMethod::FullSearch:
+    kernel_searchers_.at(id).reset(new FullSearch{ kernel.configurations() });
+    break;
+   case SearchMethod::RandomSearch:
+    kernel_searchers_.at(id).reset(new RandomSearch{ kernel.configurations(), kernel.search_args().at(0) });
+    break;
+   case SearchMethod::Annealing:
+    kernel_searchers_.at(id).reset(new Annealing{ kernel.configurations(), kernel.search_args().at(0),
+                                kernel.search_args().at(1) });
+    break;
+   case SearchMethod::PSO:
+    kernel_searchers_.at(id).reset(new PSO{ kernel.configurations(), kernel.parameters(), kernel.search_args().at(0),
+                          static_cast<size_t>(kernel.search_args().at(1)), kernel.search_args().at(2),
+                          kernel.search_args().at(3), kernel.search_args().at(4) });
+    break;
+  }
+}
+
+// =================================================================================================
+
+// Returns number of unique configurations for given kernel.
+size_t TunerImpl::getNumConfigurations(const size_t id) {
+  if(kernel_searchers_.at(id) == nullptr) {
+    initializeSearcher(id);
+  }
+
+  return kernel_searchers_.at(id)->NumConfigurations();
+}
+
+// =================================================================================================
+
+// Returns next configuration for given kernel.
+KernelInfo::Configuration TunerImpl::getNextConfiguration(const size_t id) {
+  if(kernel_searchers_.at(id) == nullptr) {
+    initializeSearcher(id);
+  }
+
+  return kernel_searchers_.at(id)->GetConfiguration();
+}
+
+// =================================================================================================
+
+// Updates searcher with given info.
+void TunerImpl::updateSearcher(const size_t id, const float previous_running_time) {
+  if(kernel_searchers_.at(id) == nullptr) {
+    throw std::runtime_error("Searcher for given kernel is not initialized.");
+  }
+
+  kernel_searchers_.at(id)->PushExecutionTime(previous_running_time);
+  kernel_searchers_.at(id)->CalculateNextIndex();
+}
+
+// =================================================================================================
+
 // Returns modified kernel source (with #defines) based on provided configuration.
 std::string TunerImpl::getConfiguredKernelSource(const size_t id,
                                                  const KernelInfo::Configuration& configuration) {
@@ -640,7 +696,7 @@ bool TunerImpl::DownloadAndCompare(KernelInfo::MemArgument &device_buffer, const
   T* reference_output = static_cast<T*>(reference_outputs_[i]);
 
   // Compares the results (L2 norm)
-  if (verification_technique_ == VerificationTechnique::AbsoluteDifference) {
+  if (verification_method_ == VerificationMethod::AbsoluteDifference) {
     for (auto j = size_t{ 0 }; j<device_buffer.size; ++j) {
       l2_norm += AbsoluteDifference(reference_output[j], host_buffer[j]);
     }
@@ -652,7 +708,7 @@ bool TunerImpl::DownloadAndCompare(KernelInfo::MemArgument &device_buffer, const
     }
     return true;
   }
-  else if (verification_technique_ == VerificationTechnique::SideBySide) {
+  else if (verification_method_ == VerificationMethod::SideBySide) {
     for (auto j = size_t{ 0 }; j<device_buffer.size; ++j)
     {
       if (AbsoluteDifference(reference_output[j], host_buffer[j]) > tolerance_treshold_) {

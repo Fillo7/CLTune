@@ -64,6 +64,7 @@ size_t Tuner::AddKernel(const std::vector<std::string> &filenames, const std::st
 size_t Tuner::AddKernelFromString(const std::string &source, const std::string &kernel_name,
                                   const IntRange &global, const IntRange &local) {
   pimpl->kernels_.push_back(KernelInfo(kernel_name, source, pimpl->device()));
+  pimpl->kernel_searchers_.push_back(nullptr);
   auto id = pimpl->kernels_.size() - 1;
   pimpl->kernels_[id].set_global_base(global);
   pimpl->kernels_[id].set_local_base(local);
@@ -346,11 +347,11 @@ void Tuner::UsePSO(const size_t id, const double fraction, const size_t swarm_si
   pimpl->kernels_[id].UsePSO(fraction, swarm_size, influence_global, influence_local, influence_random);
 }
 
-// Choose verification technique.
-void Tuner::ChooseVerificationTechnique(const VerificationTechnique technique,
-                                        const double tolerance_treshold) {
+// Choose verification method.
+void Tuner::ChooseVerificationMethod(const VerificationMethod method,
+                                     const double tolerance_treshold) {
   if (tolerance_treshold < 0.0) { throw std::runtime_error("Invalid tolerance treshold"); }
-  pimpl->verification_technique_ = technique;
+  pimpl->verification_method_ = method;
   pimpl->tolerance_treshold_ = tolerance_treshold;
 }
 

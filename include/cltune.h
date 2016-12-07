@@ -62,16 +62,16 @@ enum class SearchMethod{FullSearch, RandomSearch, Annealing, PSO};
 // Machine learning models
 enum class Model { kLinearRegression, kNeuralNetwork };
 
-// Verification techniques
-enum class VerificationTechnique { AbsoluteDifference, SideBySide };
+// Verification methods
+enum class VerificationMethod { AbsoluteDifference, SideBySide };
 
 // Structure that holds results of a tuning run
 struct PublicTunerResult {
-    std::string kernel_name;
-    float time;
-    size_t threads;
-    bool status;
-    ParameterRange parameter_values;
+  std::string kernel_name;
+  float time;
+  size_t threads;
+  bool status;
+  ParameterRange parameter_values;
 };
 
 // The tuner class and its public API
@@ -150,9 +150,9 @@ class Tuner {
                          const double influence_global, const double influence_local,
                          const double influence_random);
 
-  // Uses chosen technique for results comparison. Currently available techniques are absolute
+  // Uses chosen method for results comparison. Currently available methods are absolute
   // difference and side by side comparison.
-  void PUBLIC_API ChooseVerificationTechnique(const VerificationTechnique technique,
+  void PUBLIC_API ChooseVerificationMethod(const VerificationMethod method,
                                               const double tolerance_treshold);
 
   // Outputs the search process to a file

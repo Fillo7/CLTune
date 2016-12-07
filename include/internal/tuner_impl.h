@@ -104,6 +104,18 @@ class TunerImpl {
   // Returns searcher for specified kernel.
   std::unique_ptr<Searcher> getSearcher(const size_t id);
 
+  // Initializes searcher of a given kernel.
+  void initializeSearcher(const size_t id);
+
+  // Returns number of unique configurations for given kernel.
+  size_t getNumConfigurations(const size_t id);
+
+  // Returns next configuration for given kernel.
+  KernelInfo::Configuration getNextConfiguration(const size_t id);
+
+  // Updates searcher with given info.
+  void updateSearcher(const size_t id, const float previous_running_time);
+
   // Returns modified kernel source (with #defines) based on provided configuration.
   std::string getConfiguredKernelSource(const size_t id, const KernelInfo::Configuration& configuration);
 
@@ -157,12 +169,13 @@ class TunerImpl {
   bool output_search_process_;
   std::string search_log_filename_;
 
-  // Verification technique settings
-  VerificationTechnique verification_technique_;
+  // Verification method settings
+  VerificationMethod verification_method_;
   double tolerance_treshold_;
 
-  // Storage of kernels and output copy buffers
+  // Storage of kernels, kernel searchers and output copy buffers
   std::vector<KernelInfo> kernels_;
+  std::vector<std::unique_ptr<Searcher>> kernel_searchers_;
   std::vector<KernelInfo::MemArgument> arguments_output_copy_; // these may be modified by the kernel
 
   // Storage for the reference kernel and output

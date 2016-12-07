@@ -88,8 +88,8 @@ public:
     // Sets the tuner configurator for specified kernel. There can be up to one configurator per kernel.
     void PUBLIC_API setConfigurator(const size_t id, UniqueConfigurator configurator);
 
-    // Uses chosen technique for results comparison. Currently available techniques are absolute difference and side by side comparison.
-    void PUBLIC_API chooseVerificationTechnique(const VerificationTechnique technique, const double toleranceTreshold);
+    // Uses chosen method for results comparison. Currently available methods are absolute difference and side by side comparison.
+    void PUBLIC_API chooseVerificationMethod(const VerificationMethod method, const double toleranceTreshold);
 
     // Outputs the search process to a file
     void PUBLIC_API outputSearchLog(const std::string& filename);
