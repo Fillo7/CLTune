@@ -228,42 +228,20 @@ std::vector<PublicTunerResult> TunerImpl::TuneSingleKernel(const size_t id, cons
     #ifdef VERBOSE
       fprintf(stdout, "%s Computing the permutations of all parameters\n", kMessageVerbose.c_str());
     #endif
-    kernel.SetConfigurations();
 
     // Creates the selected search algorithm
-    std::unique_ptr<Searcher> search;
-    switch (kernel.search_method()) {
-     case SearchMethod::FullSearch:
-      search.reset(new FullSearch{ kernel.configurations() });
-      break;
-     case SearchMethod::RandomSearch:
-      search.reset(new RandomSearch{ kernel.configurations(), kernel.search_args().at(0) });
-      break;
-     case SearchMethod::Annealing:
-      search.reset(new Annealing{ kernel.configurations(), kernel.search_args().at(0),
-                                  kernel.search_args().at(1) });
-      break;
-     case SearchMethod::PSO:
-      search.reset(new PSO{ kernel.configurations(), kernel.parameters(), kernel.search_args().at(0),
-                            static_cast<size_t>(kernel.search_args().at(1)), kernel.search_args().at(2),
-                            kernel.search_args().at(3), kernel.search_args().at(4) });
-      break;
-    }
+    std::unique_ptr<Searcher> searcher = getSearcher(id);
 
     // Iterates over all possible configurations (the permutations of the tuning parameters)
-    for (auto p = size_t{ 0 }; p < search->NumConfigurations(); ++p) {
+    for (auto p = size_t{ 0 }; p < searcher->NumConfigurations(); ++p) {
       #ifdef VERBOSE
         fprintf(stdout, "%s Exploring configuration (%zu out of %zu)\n", kMessageVerbose.c_str(),
                 p + 1, search->NumConfigurations());
       #endif
-      auto permutation = search->GetConfiguration();
+      auto permutation = searcher->GetConfiguration();
 
       // Adds the parameters to the source-code string as defines
-      auto source = std::string{};
-      for (auto &config : permutation) {
-        source += config.GetDefine();
-      }
-      source += kernel.source();
+      std::string source = getConfiguredKernelSource(id, permutation);
 
       // Updates the local range with the parameter values
       kernel.ComputeRanges(permutation);
@@ -272,12 +250,12 @@ std::vector<PublicTunerResult> TunerImpl::TuneSingleKernel(const size_t id, cons
       kernel.SetNumCurrentIterations(permutation);
 
       // Compiles and runs the kernel
-      auto tuning_result = RunKernel(source, kernel, p, search->NumConfigurations());
+      auto tuning_result = RunKernel(source, kernel, p, searcher->NumConfigurations());
       tuning_result.status = VerifyOutput();
 
       // Gives timing feedback to the search algorithm and calculates the next index
-      search->PushExecutionTime(tuning_result.time);
-      search->CalculateNextIndex();
+      searcher->PushExecutionTime(tuning_result.time);
+      searcher->CalculateNextIndex();
 
       // Stores the parameters and the timing-result
       tuning_result.configuration = permutation;
@@ -297,7 +275,7 @@ std::vector<PublicTunerResult> TunerImpl::TuneSingleKernel(const size_t id, cons
     // using the "OutputSearchLog" function.
     if (output_search_process_) {
       auto file = fopen(search_log_filename_.c_str(), "w");
-      search->PrintLog(file);
+      searcher->PrintLog(file);
       fclose(file);
     }
   }
@@ -526,6 +504,50 @@ PublicTunerResult TunerImpl::ConvertTuningResultToPublic(const TunerImpl::TunerR
   }
 
   return public_result;
+}
+
+// =================================================================================================
+
+// Returns searcher for specified kernel.
+std::unique_ptr<Searcher> TunerImpl::getSearcher(const size_t id) {
+  KernelInfo& kernel = kernels_.at(id);
+  kernel.SetConfigurations();
+
+  // Creates the selected search algorithm
+  std::unique_ptr<Searcher> searcher;
+  switch (kernel.search_method()) {
+   case SearchMethod::FullSearch:
+    searcher.reset(new FullSearch{ kernel.configurations() });
+    break;
+   case SearchMethod::RandomSearch:
+    searcher.reset(new RandomSearch{ kernel.configurations(), kernel.search_args().at(0) });
+    break;
+   case SearchMethod::Annealing:
+    searcher.reset(new Annealing{ kernel.configurations(), kernel.search_args().at(0),
+                                kernel.search_args().at(1) });
+    break;
+   case SearchMethod::PSO:
+    searcher.reset(new PSO{ kernel.configurations(), kernel.parameters(), kernel.search_args().at(0),
+                          static_cast<size_t>(kernel.search_args().at(1)), kernel.search_args().at(2),
+                          kernel.search_args().at(3), kernel.search_args().at(4) });
+    break;
+  }
+
+  return searcher;
+}
+
+// =================================================================================================
+
+// Returns modified kernel source (with #defines) based on provided configuration.
+std::string TunerImpl::getConfiguredKernelSource(const size_t id,
+                                                 const KernelInfo::Configuration& configuration) {
+  auto source = std::string{};
+  for (auto &config : configuration) {
+    source += config.GetDefine();
+  }
+  source += kernels_.at(id).source();
+
+  return source;
 }
 
 // =================================================================================================
