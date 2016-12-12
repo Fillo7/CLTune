@@ -39,7 +39,7 @@
   #include "internal/cupp11.h"
 #endif
 
-#include "internal/kernel_info.h"
+#include "internal/searcher.h"
 
 #include <string> // std::string
 #include <vector> // std::vector
@@ -84,22 +84,43 @@ class TunerImpl {
   explicit TunerImpl(size_t platform_id, size_t device_id);
   ~TunerImpl();
 
-  // Starts the tuning process.
-  std::vector<PublicTunerResult> TuneAllKernels();
+  // Wrapper for the RunKernel() method, which can be called from public API.
+  PublicTunerResult RunSingleKernel(const size_t id, const ParameterRange &parameter_values);
 
   // Starts the tuning process for single kernel.
   std::vector<PublicTunerResult> TuneSingleKernel(const size_t id, const bool test_reference,
                                                   const bool clear_previous_results);
 
+  // Starts the tuning process for all kernels.
+  std::vector<PublicTunerResult> TuneAllKernels();
+
   // Compiles and runs a kernel and returns the elapsed time
   TunerResult RunKernel(const std::string &source, const KernelInfo &kernel,
                         const size_t configuration_id, const size_t num_configurations);
 
-  // Wrapper for the above method, which can be called from public API.
-  PublicTunerResult RunSingleKernel(const size_t id, const ParameterRange &parameter_values);
-
   // Converts TunerResult object to PublicTunerResult.
   PublicTunerResult ConvertTuningResultToPublic(const TunerResult &result);
+
+  // Returns searcher for specified kernel.
+  std::unique_ptr<Searcher> GetSearcher(const size_t id);
+
+  // Initializes searcher of a given kernel.
+  void InitializeSearcher(const size_t id);
+
+  // Returns number of unique configurations for given kernel.
+  size_t GetNumConfigurations(const size_t id);
+
+  // Returns next configuration for given kernel.
+  KernelInfo::Configuration GetNextConfiguration(const size_t id);
+
+  // Updates searcher with given info.
+  void UpdateSearcher(const size_t id, const float previous_running_time);
+
+  // Returns modified kernel source (with #defines) based on provided configuration.
+  std::string GetConfiguredKernelSource(const size_t id, const KernelInfo::Configuration& configuration);
+
+  // Runs reference kernel and stores its result.
+  void RunReferenceKernel();
 
   // Copies an output buffer
   template <typename T> KernelInfo::MemArgument CopyOutputBuffer(KernelInfo::MemArgument &argument);
@@ -148,16 +169,13 @@ class TunerImpl {
   bool output_search_process_;
   std::string search_log_filename_;
 
-  // The search method and its arguments
-  SearchMethod search_method_;
-  std::vector<double> search_args_;
-
-  // Verification technique settings
-  VerificationTechnique verification_technique_;
+  // Verification method settings
+  VerificationMethod verification_method_;
   double tolerance_treshold_;
 
-  // Storage of kernels and output copy buffers
+  // Storage of kernels, kernel searchers and output copy buffers
   std::vector<KernelInfo> kernels_;
+  std::vector<std::unique_ptr<Searcher>> kernel_searchers_;
   std::vector<KernelInfo::MemArgument> arguments_output_copy_; // these may be modified by the kernel
 
   // Storage for the reference kernel and output

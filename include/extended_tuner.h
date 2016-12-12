@@ -79,18 +79,17 @@ public:
 
     // Configures a specific search method. The default search method is "FullSearch". These are implemented as separate functions since
     // they each take a different number of arguments.
-    void PUBLIC_API useFullSearch();
-    void PUBLIC_API useRandomSearch(const double fraction);
-    void PUBLIC_API useAnnealing(const double fraction, const double maxTemperature);
-    void PUBLIC_API usePSO(const double fraction, const size_t swarmSize, const double influenceGlobal, const double influenceLocal,
+    void PUBLIC_API useFullSearch(const size_t id);
+    void PUBLIC_API useRandomSearch(const size_t id, const double fraction);
+    void PUBLIC_API useAnnealing(const size_t id, const double fraction, const double maxTemperature);
+    void PUBLIC_API usePSO(const size_t id, const double fraction, const size_t swarmSize, const double influenceGlobal, const double influenceLocal,
                            const double influenceRandom);
 
     // Sets the tuner configurator for specified kernel. There can be up to one configurator per kernel.
     void PUBLIC_API setConfigurator(const size_t id, UniqueConfigurator configurator);
 
-    // Uses chosen technique for results comparison. Currently available techniques are absolute difference and side by side comparison.
-    void PUBLIC_API chooseVerificationTechnique(const VerificationTechnique technique);
-    void PUBLIC_API chooseVerificationTechnique(const VerificationTechnique technique, const double toleranceTreshold);
+    // Uses chosen method for results comparison. Currently available methods are absolute difference and side by side comparison.
+    void PUBLIC_API chooseVerificationMethod(const VerificationMethod method, const double toleranceTreshold);
 
     // Outputs the search process to a file
     void PUBLIC_API outputSearchLog(const std::string& filename);
@@ -99,34 +98,45 @@ public:
     // based on this model. This is only useful if a fraction of the search space is explored, as is the case when doing random-search.
     void PUBLIC_API modelPrediction(const Model modelType, const float validationFraction, const size_t testTopXConfigurations);
 
-    // Runs single kernel using the provided configurator.
-    void PUBLIC_API runSingleKernel(const size_t id, const ParameterRange& parameterValues);
+    // Returns number of unique configurations for given kernel based on specified parameters and search method.
+    // This method should be used only if using RunSingleKernel() method.
+    size_t PUBLIC_API getNumConfigurations(const size_t id);
 
-    // Starts tuning process for single kernel using the provided configurator.
+    // Returns next configuration for given kernel based on search method.
+    // This method should be used only if using RunSingleKernel() method.
+    ParameterRange PUBLIC_API getNextConfiguration(const size_t id);
+
+    // This methods needs to be called after each getNextConfiguration() method, previous kernel running time should be provided.
+    // This method should be used only if using RunSingleKernel() method.
+    void PUBLIC_API updateKernelConfiguration(const size_t id, const float previousRunningTime);
+
+    // Runs specified kernel with given configuration, measures the running time and prints result to screen.
+    // Does not perform any tuning.
+    PublicTunerResult PUBLIC_API runSingleKernel(const size_t id, const ParameterRange& parameterValues);
+
+    // Starts tuning process for single kernel.
     void PUBLIC_API tuneSingleKernel(const size_t id);
 
-    // Starts tuning process for all kernels using the provided configurator.
+    // Starts tuning process for all kernels.
     void PUBLIC_API tuneAllKernels();
 
     // Prints tuning results of kernel with given id to screen.
     void PUBLIC_API printToScreen(const size_t id) const;
 
     // Prints tuning results of all kernels to screen.
-    void PUBLIC_API printToScreen() const;
+    void PUBLIC_API printToScreenAll() const;
 
     // Prints tuning results of kernel with given id to file.
-    void PUBLIC_API printToFile(const size_t id, const std::string &filename) const;
+    void PUBLIC_API printToFile(const size_t id, const std::string& filename) const;
 
     // Prints tuning results of all kernels to file.
-    void PUBLIC_API printToFile(const std::string &filename) const;
+    void PUBLIC_API printToFileAll(const std::string& filename) const;
 
 private:
     struct ExtendedTunerResult
     {
         cltune::PublicTunerResult basicResult;
-        bool hasConfigurator;
-        float beforeDuration;
-        float afterDuration;
+        float extendedComputationDuration;
     };
 
     size_t kernelCount;
@@ -143,16 +153,12 @@ private:
     // Helper method for printing results to screen, file, etc.
     void printResults(const size_t id, std::ostream& out) const;
 
-    // Stores tuning result for given kernel without configurator.
-    void storeTunerResult(const size_t id, const cltune::PublicTunerResult& result);
-
-    // Stores tuning result for given kernel with configurator.
+    // Stores tuning result for given kernel.
     void storeTunerResult(const size_t id, const cltune::PublicTunerResult& result,
-                          const float beforeDuration, const float afterDuration);
+                          const float extendedComputationDuration);
 
     const std::string extHeader = "[Extended Tuner] ";
-    const std::string extBeforeDuration = "Duration of beforeTuning() method: ";
-    const std::string extAfterDuration = "Duration of afterTuning() method: ";
+    const std::string extDuration = "Duration of customizedCompute() method: ";
     const std::string extKernelDuration = "Duration of kernel execution: ";
     const std::string extFastestKernelDuration = "Duration of the fastest kernel execution: ";
     const std::string extKernelParameters = "Parameters of the fastest kernel: ";

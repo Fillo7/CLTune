@@ -83,13 +83,11 @@ TunerImpl::TunerImpl():
     queue_(Queue(context_, device_)),
     num_runs_(size_t{1}),
     has_reference_(false),
-    verification_technique_(VerificationTechnique::AbsoluteDifference),
+    verification_method_(VerificationMethod::AbsoluteDifference),
     tolerance_treshold_(kMaxL2Norm),
     suppress_output_(false),
     output_search_process_(false),
-    search_log_filename_(std::string{}),
-    search_method_(SearchMethod::FullSearch),
-    search_args_(0) {
+    search_log_filename_(std::string{}) {
   if (!suppress_output_) {
     fprintf(stdout, "\n%s Initializing on platform 0 device 0\n", kMessageFull.c_str());
     auto opencl_version = device_.Version();
@@ -107,13 +105,11 @@ TunerImpl::TunerImpl(size_t platform_id, size_t device_id):
     queue_(Queue(context_, device_)),
     num_runs_(size_t{1}),
     has_reference_(false),
-    verification_technique_(VerificationTechnique::AbsoluteDifference),
+    verification_method_(VerificationMethod::AbsoluteDifference),
     tolerance_treshold_(kMaxL2Norm),
     suppress_output_(false),
     output_search_process_(false),
-    search_log_filename_(std::string{}),
-    search_method_(SearchMethod::FullSearch),
-    search_args_(0) {
+    search_log_filename_(std::string{}) {
   if (!suppress_output_) {
     fprintf(stdout, "\n%s Initializing on platform %zu device %zu\n",
             kMessageFull.c_str(), platform_id, device_id);
@@ -147,31 +143,49 @@ TunerImpl::~TunerImpl() {
 
 // =================================================================================================
 
-// Starts the tuning process. First, the reference kernel is run if it exists (output results are
-// automatically verified with respect to this reference run). Next, all permutations of all tuning-
-// parameters are computed for each kernel and those kernels are run. Their timing-results are
-// collected and stored into the tuning_results_ vector.
-std::vector<PublicTunerResult> TunerImpl::TuneAllKernels() {
+// Wrapper for RunKernel() method, which can be called from public API.
+PublicTunerResult TunerImpl::RunSingleKernel(const size_t id, const ParameterRange &parameter_values) {
+  KernelInfo& kernel = kernels_.at(id);
+  KernelInfo::Configuration configuration;
 
-  // Runs the reference kernel if it is defined
-  if (has_reference_) {
-    PrintHeader("Testing reference "+reference_kernel_->name());
-    RunKernel(reference_kernel_->source(), *reference_kernel_, 0, 1);
-    StoreReferenceOutput();
+  PrintHeader("Running kernel " + kernel.name());
+
+  if (parameter_values.size() > 0) {
+    for (auto &parameter : parameter_values) {
+      KernelInfo::Setting setting;
+      setting.name = parameter.first;
+      setting.value = parameter.second;
+      configuration.push_back(setting);
+    }
+
+    // Adds the parameters to the source-code string as defines
+    std::string source = GetConfiguredKernelSource(id, configuration);
+
+    // Updates the local range with the parameter values
+    kernel.ComputeRanges(configuration);
+
+    // Updates number of kernel iterations based on parameter value
+    kernel.SetNumCurrentIterations(configuration);
   }
 
-  // Iterates over all tunable kernels
-  for (size_t id = 0; id < kernels_.size(); id++) {
-    std::vector<PublicTunerResult> partial_results = TuneSingleKernel(id, false, false);
+  // Compiles and runs the kernel
+  auto tuning_result = RunKernel(kernel.source(), kernel, 0, 1);
+  tuning_result.status = VerifyOutput();
+
+  if (parameter_values.size() > 0) {
+    tuning_result.configuration = configuration;
   }
 
-  std::vector<PublicTunerResult> public_results;
-
-  for (auto &result : tuning_results_) {
-    public_results.push_back(ConvertTuningResultToPublic(result));
+  // Prints the result of the tuning
+  PrintHeader("Printing kernel run result to stdout");
+  if (tuning_result.status) {
+    PrintResult(stdout, tuning_result, kMessageResult);
+  }
+  else {
+    PrintResult(stdout, tuning_result, kMessageWarning);
   }
 
-  return public_results;
+  return ConvertTuningResultToPublic(tuning_result);
 }
 
 // =================================================================================================
@@ -183,10 +197,8 @@ std::vector<PublicTunerResult> TunerImpl::TuneSingleKernel(const size_t id, cons
   }
 
   // Runs the reference kernel if it is defined
-  if (has_reference_ && test_reference) {
-    PrintHeader("Testing reference " + reference_kernel_->name());
-    RunKernel(reference_kernel_->source(), *reference_kernel_, 0, 1);
-    StoreReferenceOutput();
+  if (test_reference) {
+    RunReferenceKernel();
   }
 
   KernelInfo& kernel = kernels_.at(id);
@@ -210,41 +222,20 @@ std::vector<PublicTunerResult> TunerImpl::TuneSingleKernel(const size_t id, cons
     #ifdef VERBOSE
       fprintf(stdout, "%s Computing the permutations of all parameters\n", kMessageVerbose.c_str());
     #endif
-    kernel.SetConfigurations();
 
     // Creates the selected search algorithm
-    std::unique_ptr<Searcher> search;
-    switch (search_method_) {
-      case SearchMethod::FullSearch:
-        search.reset(new FullSearch{ kernel.configurations() });
-        break;
-      case SearchMethod::RandomSearch:
-        search.reset(new RandomSearch{ kernel.configurations(), search_args_[0] });
-        break;
-      case SearchMethod::Annealing:
-        search.reset(new Annealing{ kernel.configurations(), search_args_[0], search_args_[1] });
-        break;
-      case SearchMethod::PSO:
-        search.reset(new PSO{ kernel.configurations(), kernel.parameters(), search_args_[0],
-                         static_cast<size_t>(search_args_[1]), search_args_[2],
-                         search_args_[3], search_args_[4] });
-        break;
-    }
+    std::unique_ptr<Searcher> searcher = GetSearcher(id);
 
     // Iterates over all possible configurations (the permutations of the tuning parameters)
-    for (auto p = size_t{ 0 }; p < search->NumConfigurations(); ++p) {
+    for (auto p = size_t{ 0 }; p < searcher->NumConfigurations(); ++p) {
       #ifdef VERBOSE
         fprintf(stdout, "%s Exploring configuration (%zu out of %zu)\n", kMessageVerbose.c_str(),
                 p + 1, search->NumConfigurations());
       #endif
-      auto permutation = search->GetConfiguration();
+      auto permutation = searcher->GetConfiguration();
 
       // Adds the parameters to the source-code string as defines
-      auto source = std::string{};
-      for (auto &config : permutation) {
-        source += config.GetDefine();
-      }
-      source += kernel.source();
+      std::string source = GetConfiguredKernelSource(id, permutation);
 
       // Updates the local range with the parameter values
       kernel.ComputeRanges(permutation);
@@ -253,12 +244,12 @@ std::vector<PublicTunerResult> TunerImpl::TuneSingleKernel(const size_t id, cons
       kernel.SetNumCurrentIterations(permutation);
 
       // Compiles and runs the kernel
-      auto tuning_result = RunKernel(source, kernel, p, search->NumConfigurations());
+      auto tuning_result = RunKernel(source, kernel, p, searcher->NumConfigurations());
       tuning_result.status = VerifyOutput();
 
       // Gives timing feedback to the search algorithm and calculates the next index
-      search->PushExecutionTime(tuning_result.time);
-      search->CalculateNextIndex();
+      searcher->PushExecutionTime(tuning_result.time);
+      searcher->CalculateNextIndex();
 
       // Stores the parameters and the timing-result
       tuning_result.configuration = permutation;
@@ -278,7 +269,7 @@ std::vector<PublicTunerResult> TunerImpl::TuneSingleKernel(const size_t id, cons
     // using the "OutputSearchLog" function.
     if (output_search_process_) {
       auto file = fopen(search_log_filename_.c_str(), "w");
-      search->PrintLog(file);
+      searcher->PrintLog(file);
       fclose(file);
     }
   }
@@ -289,6 +280,32 @@ std::vector<PublicTunerResult> TunerImpl::TuneSingleKernel(const size_t id, cons
       public_results.push_back(ConvertTuningResultToPublic(result));
     }
   }
+  return public_results;
+}
+
+// =================================================================================================
+
+// Starts the tuning process. First, the reference kernel is run if it exists (output results are
+// automatically verified with respect to this reference run). Next, all permutations of all tuning-
+// parameters are computed for each kernel and those kernels are run. Their timing-results are
+// collected and stored into the tuning_results_ vector.
+std::vector<PublicTunerResult> TunerImpl::TuneAllKernels() {
+  // Clears tuning results from previous runs
+  tuning_results_.clear();
+
+  RunReferenceKernel();
+
+  // Iterates over all tunable kernels
+  for (size_t id = 0; id < kernels_.size(); id++) {
+    std::vector<PublicTunerResult> partial_results = TuneSingleKernel(id, false, false);
+  }
+
+  std::vector<PublicTunerResult> public_results;
+
+  for (auto &result : tuning_results_) {
+    public_results.push_back(ConvertTuningResultToPublic(result));
+  }
+
   return public_results;
 }
 
@@ -460,68 +477,10 @@ TunerImpl::TunerResult TunerImpl::RunKernel(const std::string &source, const Ker
   // There was an exception, now return an invalid tuner results
   catch(std::exception& e) {
     fprintf(stdout, "%s Kernel %s failed\n", kMessageFailure.c_str(), kernel.name().c_str());
-    fprintf(stdout, "%s   catched exception: %s\n", kMessageFailure.c_str(), e.what());
+    fprintf(stdout, "%s   caught exception: %s\n", kMessageFailure.c_str(), e.what());
     TunerResult result = {kernel.name(), std::numeric_limits<float>::max(), 0, false, {}};
     return result;
   }
-}
-
-// =================================================================================================
-
-// Wrapper for RunKernel() method, which can be called from public API.
-PublicTunerResult TunerImpl::RunSingleKernel(const size_t id, const ParameterRange &parameter_values) {
-  // Runs the reference kernel if it is defined
-  if (has_reference_) {
-    PrintHeader("Testing reference " + reference_kernel_->name());
-    RunKernel(reference_kernel_->source(), *reference_kernel_, 0, 1);
-    StoreReferenceOutput();
-  }
-    
-  KernelInfo kernel = kernels_[id];
-  KernelInfo::Configuration configuration;
-
-  PrintHeader("Running kernel " + kernel.name());
-
-  if (parameter_values.size() > 0) {
-    for (auto &parameter : parameter_values) {
-      KernelInfo::Setting setting;
-      setting.name = parameter.first;
-      setting.value = parameter.second;
-      configuration.push_back(setting);
-    }
-
-    // Adds the parameters to the source-code string as defines
-    auto source = std::string{};
-    for (auto &config : configuration) {
-          source += config.GetDefine();
-    }
-    source += kernel.source();
-
-    // Updates the local range with the parameter values
-    kernel.ComputeRanges(configuration);
-
-    // Updates number of kernel iterations based on parameter value
-    kernel.SetNumCurrentIterations(configuration);
-  }
-
-  // Compiles and runs the kernel
-  auto tuning_result = RunKernel(kernel.source(), kernel, 0, 1);
-  tuning_result.status = VerifyOutput();
-
-  if (parameter_values.size() > 0) {
-    tuning_result.configuration = configuration;
-  }
-
-  // Prints the result of the tuning
-  PrintHeader("Printing kernel run result to stdout");
-  if (tuning_result.status) {
-    PrintResult(stdout, tuning_result, kMessageResult);
-  }
-  else {
-    PrintResult(stdout, tuning_result, kMessageWarning);
-  }
-
-  return ConvertTuningResultToPublic(tuning_result);
 }
 
 // =================================================================================================
@@ -535,10 +494,125 @@ PublicTunerResult TunerImpl::ConvertTuningResultToPublic(const TunerImpl::TunerR
   public_result.status = result.status;
 
   for (auto &parameter : result.configuration) {
-      public_result.parameter_values.push_back(std::make_pair(parameter.name, parameter.value));
+    public_result.parameter_values.push_back(std::make_pair(parameter.name, parameter.value));
   }
 
   return public_result;
+}
+
+// =================================================================================================
+
+// Returns searcher for specified kernel.
+std::unique_ptr<Searcher> TunerImpl::GetSearcher(const size_t id) {
+  KernelInfo& kernel = kernels_.at(id);
+  kernel.SetConfigurations();
+
+  // Creates the selected search algorithm
+  std::unique_ptr<Searcher> searcher;
+  switch (kernel.search_method()) {
+   case SearchMethod::FullSearch:
+    searcher.reset(new FullSearch{ kernel.configurations() });
+    break;
+   case SearchMethod::RandomSearch:
+    searcher.reset(new RandomSearch{ kernel.configurations(), kernel.search_args().at(0) });
+    break;
+   case SearchMethod::Annealing:
+    searcher.reset(new Annealing{ kernel.configurations(), kernel.search_args().at(0),
+                                  kernel.search_args().at(1) });
+    break;
+   case SearchMethod::PSO:
+    searcher.reset(new PSO{ kernel.configurations(), kernel.parameters(), kernel.search_args().at(0),
+                            static_cast<size_t>(kernel.search_args().at(1)), kernel.search_args().at(2),
+                            kernel.search_args().at(3), kernel.search_args().at(4) });
+    break;
+  }
+
+  return searcher;
+}
+
+// =================================================================================================
+
+// Initializes searcher of a given kernel.
+void TunerImpl::InitializeSearcher(const size_t id) {
+  KernelInfo& kernel = kernels_.at(id);
+  kernel.SetConfigurations();
+
+  switch (kernel.search_method()) {
+   case SearchMethod::FullSearch:
+    kernel_searchers_.at(id).reset(new FullSearch{ kernel.configurations() });
+    break;
+   case SearchMethod::RandomSearch:
+    kernel_searchers_.at(id).reset(new RandomSearch{ kernel.configurations(), kernel.search_args().at(0) });
+    break;
+   case SearchMethod::Annealing:
+    kernel_searchers_.at(id).reset(new Annealing{ kernel.configurations(), kernel.search_args().at(0),
+                                                  kernel.search_args().at(1) });
+    break;
+   case SearchMethod::PSO:
+    kernel_searchers_.at(id).reset(new PSO{ kernel.configurations(), kernel.parameters(), kernel.search_args().at(0),
+                                            static_cast<size_t>(kernel.search_args().at(1)), kernel.search_args().at(2),
+                                            kernel.search_args().at(3), kernel.search_args().at(4) });
+    break;
+  }
+}
+
+// =================================================================================================
+
+// Returns number of unique configurations for given kernel.
+size_t TunerImpl::GetNumConfigurations(const size_t id) {
+  if(kernel_searchers_.at(id) == nullptr) {
+    InitializeSearcher(id);
+  }
+
+  return kernel_searchers_.at(id)->NumConfigurations();
+}
+
+// =================================================================================================
+
+// Returns next configuration for given kernel.
+KernelInfo::Configuration TunerImpl::GetNextConfiguration(const size_t id) {
+  if(kernel_searchers_.at(id) == nullptr) {
+    throw std::runtime_error("Next configuration might not exist, call GetNumConfigurations() method first.");
+  }
+
+  return kernel_searchers_.at(id)->GetConfiguration();
+}
+
+// =================================================================================================
+
+// Updates searcher with given info.
+void TunerImpl::UpdateSearcher(const size_t id, const float previous_running_time) {
+  if(kernel_searchers_.at(id) == nullptr) {
+    throw std::runtime_error("Searcher for given kernel is not initialized.");
+  }
+
+  kernel_searchers_.at(id)->PushExecutionTime(previous_running_time);
+  kernel_searchers_.at(id)->CalculateNextIndex();
+}
+
+// =================================================================================================
+
+// Returns modified kernel source (with #defines) based on provided configuration.
+std::string TunerImpl::GetConfiguredKernelSource(const size_t id,
+                                                 const KernelInfo::Configuration& configuration) {
+  auto source = std::string{};
+  for (auto &config : configuration) {
+    source += config.GetDefine();
+  }
+  source += kernels_.at(id).source();
+
+  return source;
+}
+
+// =================================================================================================
+
+// Runs reference kernel and stores its result.
+void TunerImpl::RunReferenceKernel() {
+  if (has_reference_) {
+    PrintHeader("Testing reference " + reference_kernel_->name());
+    RunKernel(reference_kernel_->source(), *reference_kernel_, 0, 1);
+    StoreReferenceOutput();
+  }
 }
 
 // =================================================================================================
@@ -620,7 +694,7 @@ bool TunerImpl::DownloadAndCompare(KernelInfo::MemArgument &device_buffer, const
   T* reference_output = static_cast<T*>(reference_outputs_[i]);
 
   // Compares the results (L2 norm)
-  if (verification_technique_ == VerificationTechnique::AbsoluteDifference) {
+  if (verification_method_ == VerificationMethod::AbsoluteDifference) {
     for (auto j = size_t{ 0 }; j<device_buffer.size; ++j) {
       l2_norm += AbsoluteDifference(reference_output[j], host_buffer[j]);
     }
@@ -632,7 +706,7 @@ bool TunerImpl::DownloadAndCompare(KernelInfo::MemArgument &device_buffer, const
     }
     return true;
   }
-  else if (verification_technique_ == VerificationTechnique::SideBySide) {
+  else if (verification_method_ == VerificationMethod::SideBySide) {
     for (auto j = size_t{ 0 }; j<device_buffer.size; ++j)
     {
       if (AbsoluteDifference(reference_output[j], host_buffer[j]) > tolerance_treshold_) {

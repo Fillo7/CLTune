@@ -62,16 +62,16 @@ enum class SearchMethod{FullSearch, RandomSearch, Annealing, PSO};
 // Machine learning models
 enum class Model { kLinearRegression, kNeuralNetwork };
 
-// Verification techniques
-enum class VerificationTechnique { AbsoluteDifference, SideBySide };
+// Verification methods
+enum class VerificationMethod { AbsoluteDifference, SideBySide };
 
 // Structure that holds results of a tuning run
 struct PublicTunerResult {
-    std::string kernel_name;
-    float time;
-    size_t threads;
-    bool status;
-    ParameterRange parameter_values;
+  std::string kernel_name;
+  float time;
+  size_t threads;
+  bool status;
+  ParameterRange parameter_values;
 };
 
 // The tuner class and its public API
@@ -142,18 +142,17 @@ class Tuner {
   template <typename T> void AddArgumentOutputReference(const std::vector<T> &source);
   template <typename T> void AddArgumentScalarReference(const T argument);
 
-  // Configures a specific search method. The default search method is "FullSearch". These are
-  // implemented as separate functions since they each take a different number of arguments.
-  void PUBLIC_API UseFullSearch();
-  void PUBLIC_API UseRandomSearch(const double fraction);
-  void PUBLIC_API UseAnnealing(const double fraction, const double max_temperature);
-  void PUBLIC_API UsePSO(const double fraction, const size_t swarm_size, const double influence_global,
-                         const double influence_local, const double influence_random);
+  // Configures a specific search method for given kernel. Default search method is full search.
+  void PUBLIC_API UseFullSearch(const size_t id);
+  void PUBLIC_API UseRandomSearch(const size_t id, const double fraction);
+  void PUBLIC_API UseAnnealing(const size_t id, const double fraction, const double max_temperature);
+  void PUBLIC_API UsePSO(const size_t id, const double fraction, const size_t swarm_size,
+                         const double influence_global, const double influence_local,
+                         const double influence_random);
 
-  // Uses chosen technique for results comparison. Currently available techniques are absolute
+  // Uses chosen method for results comparison. Currently available methods are absolute
   // difference and side by side comparison.
-  void PUBLIC_API ChooseVerificationTechnique(const VerificationTechnique technique);
-  void PUBLIC_API ChooseVerificationTechnique(const VerificationTechnique technique,
+  void PUBLIC_API ChooseVerificationMethod(const VerificationMethod method,
                                               const double tolerance_treshold);
 
   // Outputs the search process to a file
@@ -165,6 +164,23 @@ class Tuner {
 
   // Starts the tuning process, but this time only for specified kernel.
   std::vector<PublicTunerResult> PUBLIC_API TuneSingleKernel(const size_t id);
+
+  // Returns number of unique configurations for given kernel based on specified parameters and search method.
+  // This method should be used only if using RunSingleKernel() method.
+  size_t PUBLIC_API GetNumConfigurations(const size_t id);
+
+  // Returns next configuration for given kernel based on search method.
+  // This method should be used only if using RunSingleKernel() method.
+  ParameterRange PUBLIC_API GetNextConfiguration(const size_t id);
+
+  // This methods needs to be called after each getNextConfiguration() method, previous kernel running time
+  // should be provided.
+  // This method should be used only if using RunSingleKernel() method.
+  void PUBLIC_API UpdateKernelConfiguration(const size_t id, const float previous_running_time);
+
+  // Runs reference kernel and stores its result.
+  // This method should be used only if using RunSingleKernel() method.
+  void PUBLIC_API RunReferenceKernel();
 
   // Runs specified kernel with given configuration, measures the running time and prints result to screen.
   // Does not perform any tuning.

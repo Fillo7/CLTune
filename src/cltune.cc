@@ -64,6 +64,7 @@ size_t Tuner::AddKernel(const std::vector<std::string> &filenames, const std::st
 size_t Tuner::AddKernelFromString(const std::string &source, const std::string &kernel_name,
                                   const IntRange &global, const IntRange &local) {
   pimpl->kernels_.push_back(KernelInfo(kernel_name, source, pimpl->device()));
+  pimpl->kernel_searchers_.push_back(nullptr);
   auto id = pimpl->kernels_.size() - 1;
   pimpl->kernels_[id].set_global_base(global);
   pimpl->kernels_[id].set_local_base(local);
@@ -321,43 +322,36 @@ template <> void PUBLIC_API Tuner::AddArgumentScalarReference<double2>(const dou
 // =================================================================================================
 
 // Use full search as a search strategy. This is the default method.
-void Tuner::UseFullSearch() {
-  pimpl->search_method_ = SearchMethod::FullSearch;
+void Tuner::UseFullSearch(const size_t id) {
+  if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
+  pimpl->kernels_[id].UseFullSearch();
 }
 
 // Use random search as a search strategy.
-void Tuner::UseRandomSearch(const double fraction) {
-  pimpl->search_method_ = SearchMethod::RandomSearch;
-  pimpl->search_args_.push_back(fraction);
+void Tuner::UseRandomSearch(const size_t id, const double fraction) {
+  if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
+  pimpl->kernels_[id].UseRandomSearch(fraction);
 }
 
 // Use simulated annealing as a search strategy.
-void Tuner::UseAnnealing(const double fraction, const double max_temperature) {
-  pimpl->search_method_ = SearchMethod::Annealing;
-  pimpl->search_args_.push_back(fraction);
-  pimpl->search_args_.push_back(max_temperature);
+void Tuner::UseAnnealing(const size_t id, const double fraction, const double max_temperature) {
+  if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
+  pimpl->kernels_[id].UseAnnealing(fraction, max_temperature);
 }
 
 // Use PSO as a search strategy.
-void Tuner::UsePSO(const double fraction, const size_t swarm_size, const double influence_global,
-                   const double influence_local, const double influence_random) {
-  pimpl->search_method_ = SearchMethod::PSO;
-  pimpl->search_args_.push_back(fraction);
-  pimpl->search_args_.push_back(static_cast<double>(swarm_size));
-  pimpl->search_args_.push_back(influence_global);
-  pimpl->search_args_.push_back(influence_local);
-  pimpl->search_args_.push_back(influence_random);
+void Tuner::UsePSO(const size_t id, const double fraction, const size_t swarm_size,
+                   const double influence_global, const double influence_local,
+                   const double influence_random) {
+  if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
+  pimpl->kernels_[id].UsePSO(fraction, swarm_size, influence_global, influence_local, influence_random);
 }
 
-// Choose verification technique.
-void Tuner::ChooseVerificationTechnique(const VerificationTechnique technique) {
-  pimpl->verification_technique_ = technique;
-}
-
-void Tuner::ChooseVerificationTechnique(const VerificationTechnique technique,
-                                        const double tolerance_treshold) {
+// Choose verification method.
+void Tuner::ChooseVerificationMethod(const VerificationMethod method,
+                                     const double tolerance_treshold) {
   if (tolerance_treshold < 0.0) { throw std::runtime_error("Invalid tolerance treshold"); }
-  pimpl->verification_technique_ = technique;
+  pimpl->verification_method_ = method;
   pimpl->tolerance_treshold_ = tolerance_treshold;
 }
 
@@ -380,6 +374,42 @@ std::vector<PublicTunerResult> Tuner::TuneAllKernels() {
 std::vector<PublicTunerResult> Tuner::TuneSingleKernel(const size_t id) {
   if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
   return pimpl->TuneSingleKernel(id, true, true);
+}
+
+// =================================================================================================
+
+// Returns number of unique configurations for given kernel based on specified parameters and search method.
+size_t Tuner::GetNumConfigurations(const size_t id) {
+  if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
+  return pimpl->GetNumConfigurations(id);
+}
+
+// Returns next configuration for given kernel based on search method.
+ParameterRange Tuner::GetNextConfiguration(const size_t id) {
+  if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
+
+  ParameterRange parameters;
+  KernelInfo::Configuration config = pimpl->GetNextConfiguration(id);
+
+  for (auto& config_unit : config) {
+    parameters.push_back(std::make_pair(config_unit.name, config_unit.value));
+  }
+
+  return parameters;
+}
+
+// This methods needs to be called after each getNextConfiguration() method, previous kernel running time
+// should be provided.
+void Tuner::UpdateKernelConfiguration(const size_t id, const float previous_running_time) {
+  if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
+  pimpl->UpdateSearcher(id, previous_running_time);
+}
+
+// =================================================================================================
+
+// Runs reference kernel and stores its result.
+void Tuner::RunReferenceKernel() {
+  pimpl->RunReferenceKernel();
 }
 
 // =================================================================================================
