@@ -274,6 +274,8 @@ PublicTunerResult ExtendedTuner::runSingleKernel(const size_t id, const Paramete
 
 void ExtendedTuner::tuneSingleKernel(const size_t id)
 {
+    basicTuner->RunReferenceKernel();
+
     size_t configuratorIndex = getConfiguratorIndex(id);
 
     auto begin = std::chrono::high_resolution_clock::now();

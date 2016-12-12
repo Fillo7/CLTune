@@ -178,6 +178,10 @@ class Tuner {
   // This method should be used only if using RunSingleKernel() method.
   void PUBLIC_API UpdateKernelConfiguration(const size_t id, const float previous_running_time);
 
+  // Runs reference kernel and stores its result.
+  // This method should be used only if using RunSingleKernel() method.
+  void PUBLIC_API RunReferenceKernel();
+
   // Runs specified kernel with given configuration, measures the running time and prints result to screen.
   // Does not perform any tuning.
   PublicTunerResult PUBLIC_API RunSingleKernel(const size_t id, const ParameterRange &parameter_values);

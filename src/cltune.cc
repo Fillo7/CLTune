@@ -407,6 +407,13 @@ void Tuner::UpdateKernelConfiguration(const size_t id, const float previous_runn
 
 // =================================================================================================
 
+// Runs reference kernel and stores its result.
+void Tuner::RunReferenceKernel() {
+    pimpl->RunReferenceKernel();
+}
+
+// =================================================================================================
+
 // Runs single kernel with given configuration and measures time.
 PublicTunerResult Tuner::RunSingleKernel(const size_t id, const ParameterRange &parameter_values) {
   if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }

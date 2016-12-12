@@ -145,8 +145,6 @@ TunerImpl::~TunerImpl() {
 
 // Wrapper for RunKernel() method, which can be called from public API.
 PublicTunerResult TunerImpl::RunSingleKernel(const size_t id, const ParameterRange &parameter_values) {
-  RunReferenceKernel();
-
   KernelInfo& kernel = kernels_.at(id);
   KernelInfo::Configuration configuration;
 
