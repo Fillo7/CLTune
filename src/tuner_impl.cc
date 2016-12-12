@@ -161,7 +161,7 @@ PublicTunerResult TunerImpl::RunSingleKernel(const size_t id, const ParameterRan
     }
 
     // Adds the parameters to the source-code string as defines
-    std::string source = getConfiguredKernelSource(id, configuration);
+    std::string source = GetConfiguredKernelSource(id, configuration);
 
     // Updates the local range with the parameter values
     kernel.ComputeRanges(configuration);
@@ -226,7 +226,7 @@ std::vector<PublicTunerResult> TunerImpl::TuneSingleKernel(const size_t id, cons
     #endif
 
     // Creates the selected search algorithm
-    std::unique_ptr<Searcher> searcher = getSearcher(id);
+    std::unique_ptr<Searcher> searcher = GetSearcher(id);
 
     // Iterates over all possible configurations (the permutations of the tuning parameters)
     for (auto p = size_t{ 0 }; p < searcher->NumConfigurations(); ++p) {
@@ -237,7 +237,7 @@ std::vector<PublicTunerResult> TunerImpl::TuneSingleKernel(const size_t id, cons
       auto permutation = searcher->GetConfiguration();
 
       // Adds the parameters to the source-code string as defines
-      std::string source = getConfiguredKernelSource(id, permutation);
+      std::string source = GetConfiguredKernelSource(id, permutation);
 
       // Updates the local range with the parameter values
       kernel.ComputeRanges(permutation);
@@ -505,7 +505,7 @@ PublicTunerResult TunerImpl::ConvertTuningResultToPublic(const TunerImpl::TunerR
 // =================================================================================================
 
 // Returns searcher for specified kernel.
-std::unique_ptr<Searcher> TunerImpl::getSearcher(const size_t id) {
+std::unique_ptr<Searcher> TunerImpl::GetSearcher(const size_t id) {
   KernelInfo& kernel = kernels_.at(id);
   kernel.SetConfigurations();
 
@@ -535,7 +535,7 @@ std::unique_ptr<Searcher> TunerImpl::getSearcher(const size_t id) {
 // =================================================================================================
 
 // Initializes searcher of a given kernel.
-void TunerImpl::initializeSearcher(const size_t id) {
+void TunerImpl::InitializeSearcher(const size_t id) {
   KernelInfo& kernel = kernels_.at(id);
   kernel.SetConfigurations();
 
@@ -561,9 +561,9 @@ void TunerImpl::initializeSearcher(const size_t id) {
 // =================================================================================================
 
 // Returns number of unique configurations for given kernel.
-size_t TunerImpl::getNumConfigurations(const size_t id) {
+size_t TunerImpl::GetNumConfigurations(const size_t id) {
   if(kernel_searchers_.at(id) == nullptr) {
-    initializeSearcher(id);
+    InitializeSearcher(id);
   }
 
   return kernel_searchers_.at(id)->NumConfigurations();
@@ -572,9 +572,9 @@ size_t TunerImpl::getNumConfigurations(const size_t id) {
 // =================================================================================================
 
 // Returns next configuration for given kernel.
-KernelInfo::Configuration TunerImpl::getNextConfiguration(const size_t id) {
+KernelInfo::Configuration TunerImpl::GetNextConfiguration(const size_t id) {
   if(kernel_searchers_.at(id) == nullptr) {
-    initializeSearcher(id);
+      throw std::runtime_error("Next configuration might not exist, call GetNumConfigurations() method first.");
   }
 
   return kernel_searchers_.at(id)->GetConfiguration();
@@ -583,7 +583,7 @@ KernelInfo::Configuration TunerImpl::getNextConfiguration(const size_t id) {
 // =================================================================================================
 
 // Updates searcher with given info.
-void TunerImpl::updateSearcher(const size_t id, const float previous_running_time) {
+void TunerImpl::UpdateSearcher(const size_t id, const float previous_running_time) {
   if(kernel_searchers_.at(id) == nullptr) {
     throw std::runtime_error("Searcher for given kernel is not initialized.");
   }
@@ -595,7 +595,7 @@ void TunerImpl::updateSearcher(const size_t id, const float previous_running_tim
 // =================================================================================================
 
 // Returns modified kernel source (with #defines) based on provided configuration.
-std::string TunerImpl::getConfiguredKernelSource(const size_t id,
+std::string TunerImpl::GetConfiguredKernelSource(const size_t id,
                                                  const KernelInfo::Configuration& configuration) {
   auto source = std::string{};
   for (auto &config : configuration) {

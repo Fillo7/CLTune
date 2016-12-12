@@ -102,22 +102,22 @@ class TunerImpl {
   PublicTunerResult ConvertTuningResultToPublic(const TunerResult &result);
 
   // Returns searcher for specified kernel.
-  std::unique_ptr<Searcher> getSearcher(const size_t id);
+  std::unique_ptr<Searcher> GetSearcher(const size_t id);
 
   // Initializes searcher of a given kernel.
-  void initializeSearcher(const size_t id);
+  void InitializeSearcher(const size_t id);
 
   // Returns number of unique configurations for given kernel.
-  size_t getNumConfigurations(const size_t id);
+  size_t GetNumConfigurations(const size_t id);
 
   // Returns next configuration for given kernel.
-  KernelInfo::Configuration getNextConfiguration(const size_t id);
+  KernelInfo::Configuration GetNextConfiguration(const size_t id);
 
   // Updates searcher with given info.
-  void updateSearcher(const size_t id, const float previous_running_time);
+  void UpdateSearcher(const size_t id, const float previous_running_time);
 
   // Returns modified kernel source (with #defines) based on provided configuration.
-  std::string getConfiguredKernelSource(const size_t id, const KernelInfo::Configuration& configuration);
+  std::string GetConfiguredKernelSource(const size_t id, const KernelInfo::Configuration& configuration);
 
   // Runs reference kernel and stores its result.
   void RunReferenceKernel();

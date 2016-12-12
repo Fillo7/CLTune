@@ -5,39 +5,45 @@
 #include <vector>
 
 #include "extended_tuner.h"
+#include "tuner_configurator.h"
 
 // Inline definition of example configurator class, which provides implementation of TunerConfigurator interface
-/*class ExampleConfigurator : public cltune::TunerConfigurator
+class ExampleConfigurator: public cltune::TunerConfigurator
 {
 public:
-ExampleConfigurator() {}
+    ExampleConfigurator(cltune::ExtendedTuner& tuner, size_t kernelId) :
+        kernelId(kernelId)
+    {
+        this->tuner = &tuner;
+    }
 
-ExampleConfigurator(cltune::ExtendedTuner& tuner, size_t kernelId):
-kernelId(kernelId)
-{
-this->tuner = &tuner;
-}
+    virtual void customizedComputation()
+    {
+        size_t configurationsCount = tuner->getNumConfigurations(kernelId); // Initialize searcher and get total number of unique configurations
 
-virtual void beforeTuning()
-{
-customBeforeTuning(4);
-}
+        for (size_t i = 0; i < configurationsCount; i++)
+        {
+            cltune::ParameterRange configuration = tuner->getNextConfiguration(kernelId); // Acquire next configuration
+            cltune::PublicTunerResult result = tuner->runSingleKernel(kernelId, configuration); // Run kernel with acquired configuration
 
-virtual void afterTuning()
-{
-std::cout << "afterTuning() method of example configurator is in progress..." << std::endl;
-}
+            // Notify tuner of previous kernel running time, this is needed for computing next configuration
+            tuner->updateKernelConfiguration(kernelId, result.time);
+
+            // Store result of current kernel run
+            tuningResults.push_back(result);
+        }
+    }
+
+    virtual std::vector<cltune::PublicTunerResult> getTuningResults()
+    {
+        return tuningResults;
+    }
 
 private:
-cltune::ExtendedTuner* tuner;
-size_t kernelId;
-
-void customBeforeTuning(int customAttribute)
-{
-tuner->addArgumentScalar(kernelId, customAttribute);
-std::cout << "Custom beforeTuning() method of example configurator is in progress. Custom attribute is being used: " << customAttribute << std::endl;
-}
-};*/
+    cltune::ExtendedTuner* tuner;
+    size_t kernelId;
+    std::vector<cltune::PublicTunerResult> tuningResults;
+};
 
 int main(int argc, char** argv)
 {
@@ -115,15 +121,15 @@ int main(int argc, char** argv)
     // Choose verification method and specify tolerance treshold
     tuner.chooseVerificationMethod(cltune::VerificationMethod::SideBySide, 1e-4);
 
-    // Set the tuner configurator to newly created custom class (currently unusable)
-    //tuner.setConfigurator(kernelId, cltune::UniqueConfigurator(new ExampleConfigurator(tuner, kernelId)));
+    // Set the tuner configurator to newly created custom class
+    tuner.setConfigurator(kernelId, cltune::UniqueConfigurator(new ExampleConfigurator(tuner, kernelId)));
 
     // Begin tuning process for all kernels
     tuner.tuneAllKernels();
 
     // Print tuning results for all kernels to screen and to file
-    tuner.printToScreen();
-    tuner.printToFile(std::string("test.txt"));
+    tuner.printToScreenAll();
+    tuner.printToFileAll(std::string("test.txt"));
 
     std::cin.get();
     return 0;

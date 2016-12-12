@@ -167,16 +167,16 @@ class Tuner {
 
   // Returns number of unique configurations for given kernel based on specified parameters and search method.
   // This method should be used only if using RunSingleKernel() method.
-  size_t PUBLIC_API getNumConfigurations(const size_t id);
+  size_t PUBLIC_API GetNumConfigurations(const size_t id);
 
   // Returns next configuration for given kernel based on search method.
   // This method should be used only if using RunSingleKernel() method.
-  ParameterRange PUBLIC_API getNextConfiguration(const size_t id);
+  ParameterRange PUBLIC_API GetNextConfiguration(const size_t id);
 
   // This methods needs to be called after each getNextConfiguration() method, previous kernel running time
   // should be provided.
   // This method should be used only if using RunSingleKernel() method.
-  void PUBLIC_API updateKernelConfiguration(const size_t id, const float previous_running_time);
+  void PUBLIC_API UpdateKernelConfiguration(const size_t id, const float previous_running_time);
 
   // Runs specified kernel with given configuration, measures the running time and prints result to screen.
   // Does not perform any tuning.
