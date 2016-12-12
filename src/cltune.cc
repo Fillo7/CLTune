@@ -409,7 +409,7 @@ void Tuner::UpdateKernelConfiguration(const size_t id, const float previous_runn
 
 // Runs reference kernel and stores its result.
 void Tuner::RunReferenceKernel() {
-    pimpl->RunReferenceKernel();
+  pimpl->RunReferenceKernel();
 }
 
 // =================================================================================================

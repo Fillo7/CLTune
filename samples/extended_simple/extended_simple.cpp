@@ -129,8 +129,7 @@ int main(int argc, char** argv)
 
     // Print tuning results for all kernels to screen and to file
     tuner.printToScreenAll();
-    tuner.printToFileAll(std::string("test.txt"));
+    tuner.printToFileAll(std::string("extended_simple_output.txt"));
 
-    std::cin.get();
     return 0;
 }

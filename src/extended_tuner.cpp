@@ -14,7 +14,7 @@ using half = cl_half;
 using float2 = std::complex<float>;
 using double2 = std::complex<double>;
 
-// ==============================================================================================================================================
+// ==================================================================================================================================================
 // Constructors and destructor
 
 ExtendedTuner::ExtendedTuner(size_t platformId, size_t deviceId):
@@ -24,7 +24,7 @@ ExtendedTuner::ExtendedTuner(size_t platformId, size_t deviceId):
 
 ExtendedTuner::~ExtendedTuner() {}
 
-// ==============================================================================================================================================
+// ==================================================================================================================================================
 // Kernel addition methods
 
 size_t ExtendedTuner::addKernel(const std::vector<std::string>& filenames, const std::string& kernelName, const IntRange& global,
@@ -59,7 +59,7 @@ void ExtendedTuner::setReferenceFromString(const std::string& source, const std:
     basicTuner->SetReferenceFromString(source, kernelName, global, local);
 }
 
-// ==============================================================================================================================================
+// ==================================================================================================================================================
 // Tuning parameter addition methods
 
 void ExtendedTuner::addParameter(const size_t id, const std::string& parameterName, const std::initializer_list<size_t>& values)
@@ -107,7 +107,7 @@ void ExtendedTuner::setLocalMemoryUsage(const size_t id, LocalMemoryFunction amo
     basicTuner->SetLocalMemoryUsage(id, amount, parameters);
 }
 
-// ==============================================================================================================================================
+// ==================================================================================================================================================
 // Argument addition methods
 
 template <typename T> void ExtendedTuner::addArgumentInput(const size_t id, const std::vector<T> &source)
@@ -194,7 +194,7 @@ template void PUBLIC_API ExtendedTuner::addArgumentScalarReference<double>(const
 template void PUBLIC_API ExtendedTuner::addArgumentScalarReference<float2>(const float2 argument);
 template void PUBLIC_API ExtendedTuner::addArgumentScalarReference<double2>(const double2 argument);
 
-// ==============================================================================================================================================
+// ==================================================================================================================================================
 // Additional settings methods
 
 void ExtendedTuner::useFullSearch(const size_t id)
@@ -246,7 +246,7 @@ void ExtendedTuner::modelPrediction(const Model modelType, const float validatio
     basicTuner->ModelPrediction(modelType, validationFraction, testTopXConfigurations);
 }
 
-// ==============================================================================================================================================
+// ==================================================================================================================================================
 // Tuning customization methods
 
 size_t ExtendedTuner::getNumConfigurations(const size_t id)
@@ -269,7 +269,7 @@ PublicTunerResult ExtendedTuner::runSingleKernel(const size_t id, const Paramete
     return basicTuner->RunSingleKernel(id, parameterValues);
 }
 
-// ==============================================================================================================================================
+// ==================================================================================================================================================
 // Tuning methods
 
 void ExtendedTuner::tuneSingleKernel(const size_t id)
@@ -301,7 +301,7 @@ void ExtendedTuner::tuneAllKernels()
     }
 }
 
-// ==============================================================================================================================================
+// ==================================================================================================================================================
 // Output methods
 
 void ExtendedTuner::printToScreen(const size_t id) const
@@ -342,7 +342,7 @@ void ExtendedTuner::printToFileAll(const std::string& filename) const
     }
 }
 
-// ==============================================================================================================================================
+// ==================================================================================================================================================
 // Private methods
 
 size_t ExtendedTuner::getConfiguratorIndex(const size_t kernelId) const
@@ -401,8 +401,7 @@ void ExtendedTuner::printResults(const size_t id, std::ostream& out) const
     out << extTotalDuration << best.extendedComputationDuration + best.basicResult.time << extMs << std::endl;
 }
 
-void ExtendedTuner::storeTunerResult(const size_t id, const cltune::PublicTunerResult& result,
-                                     const float extendedComputationDuration)
+void ExtendedTuner::storeTunerResult(const size_t id, const cltune::PublicTunerResult& result, const float extendedComputationDuration)
 {
     ExtendedTunerResult extendedResult;
     extendedResult.basicResult = result;
