@@ -1,7 +1,7 @@
 #ifndef CLTUNE_TUNER_CONFIGURATOR_H_
 #define CLTUNE_TUNER_CONFIGURATOR_H_
 
-#include "cltune.h"
+#include "internal/internal_api.h"
 
 namespace cltune
 {

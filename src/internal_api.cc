@@ -26,7 +26,7 @@
 // =================================================================================================
 
 // The corresponding header file
-#include "cltune.h"
+#include "internal/internal_api.h"
 
 // And the implemenation (Pimpl idiom)
 #include "internal/tuner_impl.h"
@@ -379,7 +379,7 @@ std::vector<PublicTunerResult> Tuner::TuneSingleKernel(const size_t id) {
 // =================================================================================================
 
 // Returns number of unique configurations for given kernel based on specified parameters and search method.
-size_t Tuner::GetNumConfigurations(const size_t id) {
+size_t Tuner::GetNumConfigurations(const size_t id) const {
   if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
   return pimpl->GetNumConfigurations(id);
 }

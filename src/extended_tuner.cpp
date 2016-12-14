@@ -254,7 +254,7 @@ size_t ExtendedTuner::getNumConfigurations(const size_t id)
     return basicTuner->GetNumConfigurations(id);
 }
 
-ParameterRange ExtendedTuner::getNextConfiguration(const size_t id)
+ParameterRange ExtendedTuner::getNextConfiguration(const size_t id) const
 {
     return basicTuner->GetNextConfiguration(id);
 }
@@ -370,7 +370,6 @@ void ExtendedTuner::printKernelInfo(const cltune::PublicTunerResult& result, std
 
 void ExtendedTuner::printResults(const size_t id, std::ostream& out) const 
 {
-    // To do: this method is currently sub-optimal, need to figure out better way to handle results.
     if (results.size() < 1)
     {
         out << extNoResults << std::endl;

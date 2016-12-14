@@ -5,7 +5,6 @@
 #include <vector>
 
 #include "extended_tuner.h"
-#include "tuner_configurator.h"
 
 // Inline definition of example configurator class, which provides implementation of TunerConfigurator interface
 class ExampleConfigurator: public cltune::TunerConfigurator

@@ -5,7 +5,7 @@
 #include <utility>
 #include <vector>
 
-#include "cltune.h"
+#include "internal/internal_api.h"
 #include "tuner_configurator.h"
 
 // Exports library functions under Windows when building a DLL.
@@ -104,7 +104,7 @@ public:
 
     // Returns next configuration for given kernel based on search method.
     // This method should be used only if using RunSingleKernel() method.
-    ParameterRange PUBLIC_API getNextConfiguration(const size_t id);
+    ParameterRange PUBLIC_API getNextConfiguration(const size_t id) const;
 
     // This methods needs to be called after each getNextConfiguration() method, previous kernel running time should be provided.
     // This method should be used only if using RunSingleKernel() method.
@@ -142,7 +142,7 @@ private:
     size_t kernelCount;
     std::unique_ptr<Tuner> basicTuner;
     std::vector<std::pair<size_t, UniqueConfigurator>> configurators;
-    std::vector<std::pair<size_t, ExtendedTunerResult>> results;
+    std::vector<std::pair<size_t, ExtendedTunerResult>> results; // To do: implement better way to store results (map?)
 
     // Checks if configurator exists for given kernel. Returns its position inside vector if it does, returns -1 otherwise.
     size_t getConfiguratorIndex(const size_t kernelId) const;

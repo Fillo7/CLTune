@@ -2,7 +2,7 @@
 #define CLTUNE_DEFAULT_CONFIGURATOR_H_
 
 #include "tuner_configurator.h"
-#include "cltune.h"
+#include "internal/internal_api.h"
 
 namespace cltune
 {

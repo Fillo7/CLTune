@@ -45,7 +45,7 @@
   #include "internal/cupp11.h"
 #endif
 
-#include "cltune.h"
+#include "internal/internal_api.h"
 #include "internal/half.h" // host data-type for half-precision floating-point (16-bit)
 
 namespace cltune {
