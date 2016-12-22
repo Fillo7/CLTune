@@ -15,7 +15,7 @@ using float2 = std::complex<float>;
 using double2 = std::complex<double>;
 
 // ==================================================================================================================================================
-// Constructors and destructor
+// Constructor and destructor
 
 ExtendedTuner::ExtendedTuner(size_t platformId, size_t deviceId):
     kernelCount(0),
@@ -247,49 +247,34 @@ void ExtendedTuner::modelPrediction(const Model modelType, const float validatio
 }
 
 // ==================================================================================================================================================
-// Tuning customization methods
-
-size_t ExtendedTuner::getNumConfigurations(const size_t id)
-{
-    return basicTuner->GetNumConfigurations(id);
-}
-
-ParameterRange ExtendedTuner::getNextConfiguration(const size_t id) const
-{
-    return basicTuner->GetNextConfiguration(id);
-}
-
-void ExtendedTuner::updateKernelConfiguration(const size_t id, const float previousRunningTime)
-{
-    basicTuner->UpdateKernelConfiguration(id, previousRunningTime);
-}
+// Tuning methods
 
 PublicTunerResult ExtendedTuner::runSingleKernel(const size_t id, const ParameterRange& parameterValues)
 {
     return basicTuner->RunSingleKernel(id, parameterValues);
 }
 
-// ==================================================================================================================================================
-// Tuning methods
-
 void ExtendedTuner::tuneSingleKernel(const size_t id)
 {
     basicTuner->RunReferenceKernel();
 
     size_t configuratorIndex = getConfiguratorIndex(id);
+    size_t configurationsCount = basicTuner->GetNumConfigurations(id); // Initialize searcher and get total number of unique configurations
 
-    auto begin = std::chrono::high_resolution_clock::now();
-
-    configurators.at(configuratorIndex).second->customizedComputation();
-
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
-
-    std::vector<cltune::PublicTunerResult> results = configurators.at(configuratorIndex).second->getTuningResults();
-
-    for (auto& result : results)
+    for (size_t i = 0; i < configurationsCount; i++)
     {
-        storeTunerResult(id, result, (float)duration);
+        ParameterRange configuration = basicTuner->GetNextConfiguration(id); // Acquire next configuration
+
+        auto begin = std::chrono::high_resolution_clock::now();
+        // Run kernel with acquired configuration, this is timed part
+        PublicTunerResult result = configurators.at(configuratorIndex).second->customizedComputation(configuration);
+        auto end = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
+
+        // Notify tuner of previous kernel running time, this is needed for computing next configuration
+        basicTuner->UpdateKernelConfiguration(id, result.time);
+
+        storeTunerResult(id, result, static_cast<float>(duration));
     }
 }
 
@@ -385,7 +370,7 @@ void ExtendedTuner::printResults(const size_t id, std::ostream& out) const
             out << extKernelDuration << result.second.basicResult.time << extMs << std::endl;
             printKernelInfo(result.second.basicResult, out);
 
-            if (best.basicResult.time > result.second.basicResult.time)
+            if(best.basicResult.time + best.extendedComputationDuration > result.second.basicResult.time + result.second.extendedComputationDuration)
             {
                 best.extendedComputationDuration = result.second.extendedComputationDuration;
                 best.basicResult = result.second.basicResult;

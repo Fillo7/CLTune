@@ -16,32 +16,18 @@ public:
         this->tuner = &tuner;
     }
 
-    virtual void customizedComputation()
+    virtual cltune::PublicTunerResult customizedComputation(const cltune::ParameterRange& configuration)
     {
-        size_t configurationsCount = tuner->getNumConfigurations(kernelId); // Initialize searcher and get total number of unique configurations
+        // Additional computations may be executed here
 
-        for (size_t i = 0; i < configurationsCount; i++)
-        {
-            cltune::ParameterRange configuration = tuner->getNextConfiguration(kernelId); // Acquire next configuration
-            cltune::PublicTunerResult result = tuner->runSingleKernel(kernelId, configuration); // Run kernel with acquired configuration
+        return tuner->runSingleKernel(kernelId, configuration);
 
-            // Notify tuner of previous kernel running time, this is needed for computing next configuration
-            tuner->updateKernelConfiguration(kernelId, result.time);
-
-            // Store result of current kernel run
-            tuningResults.push_back(result);
-        }
-    }
-
-    virtual std::vector<cltune::PublicTunerResult> getTuningResults()
-    {
-        return tuningResults;
+        // Additional computations may be executed here
     }
 
 private:
     cltune::ExtendedTuner* tuner;
     size_t kernelId;
-    std::vector<cltune::PublicTunerResult> tuningResults;
 };
 
 int main(int argc, char** argv)

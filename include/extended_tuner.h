@@ -24,11 +24,17 @@ using UniqueConfigurator = std::unique_ptr<TunerConfigurator>;
 class ExtendedTuner
 {
 public:
+    // ==============================================================================================================================================
+    // Constructor and destructor
+
     // Initializes the extended tuner by providing platform id and device id.
     explicit PUBLIC_API ExtendedTuner(size_t platformId, size_t deviceId);
     
     // Extended tuner destructor.
     PUBLIC_API ~ExtendedTuner();
+
+    // ==============================================================================================================================================
+    // Kernel addition methods
 
     // Adds a new kernel to the list of tuning-kernels and returns a unique ID (to be used when adding tuning parameters).
     // Either loads the source from filenames or from string.
@@ -41,6 +47,9 @@ public:
     void PUBLIC_API setReference(const std::vector<std::string>& filenames, const std::string& kernelName, const IntRange& global,
                                  const IntRange& local);
     void PUBLIC_API setReferenceFromString(const std::string& source, const std::string& kernelName, const IntRange& global, const IntRange& local);
+
+    // ==============================================================================================================================================
+    // Tuning parameter addition methods
 
     // Adds a new tuning parameter for a kernel with a specific ID. The parameter has a name, the number of values, and a list of values.
     void PUBLIC_API addParameter(const size_t id, const std::string& parameterName, const std::initializer_list<size_t>& values);
@@ -62,12 +71,15 @@ public:
     // which takes a number of tuning parameters, given as a vector of strings (parameter names). Their names are later substituted by actual values.
     void PUBLIC_API addConstraint(const size_t id, ConstraintFunction validIf, const std::vector<std::string>& parameters);
 
-    // As above, but for local memory usage. If this function is not called, it is assumed that the
-    // local memory usage is 0: no configurations will be excluded because of too much local memory.
+    // As above, but for local memory usage. If this function is not called, it is assumed that the local memory usage is 0: no configurations
+    // will be excluded because of too much local memory.
     void PUBLIC_API setLocalMemoryUsage(const size_t id, LocalMemoryFunction amount, const std::vector<std::string>& parameters);
 
-    // Functions to add kernel-arguments for input buffers, output buffers, and scalars. Make sure to
-    // call these in the order in which the arguments appear in the kernel.
+    // ==============================================================================================================================================
+    // Argument addition methods
+
+    // Functions to add kernel-arguments for input buffers, output buffers, and scalars.
+    // Make sure to call these in the order in which the arguments appear in the kernel.
     template <typename T> void addArgumentInput(const size_t id, const std::vector<T>& source);
     template <typename T> void addArgumentOutput(const size_t id, const std::vector<T>& source);
     template <typename T> void addArgumentScalar(const size_t id, const T argument);
@@ -76,6 +88,9 @@ public:
     template <typename T> void addArgumentInputReference(const std::vector<T>& source);
     template <typename T> void addArgumentOutputReference(const std::vector<T>& source);
     template <typename T> void addArgumentScalarReference(const T argument);
+
+    // ==============================================================================================================================================
+    // Additional settings methods
 
     // Configures a specific search method. The default search method is "FullSearch". These are implemented as separate functions since
     // they each take a different number of arguments.
@@ -98,20 +113,10 @@ public:
     // based on this model. This is only useful if a fraction of the search space is explored, as is the case when doing random-search.
     void PUBLIC_API modelPrediction(const Model modelType, const float validationFraction, const size_t testTopXConfigurations);
 
-    // Returns number of unique configurations for given kernel based on specified parameters and search method.
-    // This method should be used only if using RunSingleKernel() method.
-    size_t PUBLIC_API getNumConfigurations(const size_t id);
+    // ==============================================================================================================================================
+    // Tuning methods
 
-    // Returns next configuration for given kernel based on search method.
-    // This method should be used only if using RunSingleKernel() method.
-    ParameterRange PUBLIC_API getNextConfiguration(const size_t id) const;
-
-    // This methods needs to be called after each getNextConfiguration() method, previous kernel running time should be provided.
-    // This method should be used only if using RunSingleKernel() method.
-    void PUBLIC_API updateKernelConfiguration(const size_t id, const float previousRunningTime);
-
-    // Runs specified kernel with given configuration, measures the running time and prints result to screen.
-    // Does not perform any tuning.
+    // Runs specified kernel with given configuration, measures the running time and prints result to screen. Does not perform any tuning.
     PublicTunerResult PUBLIC_API runSingleKernel(const size_t id, const ParameterRange& parameterValues);
 
     // Starts tuning process for single kernel.
@@ -119,6 +124,9 @@ public:
 
     // Starts tuning process for all kernels.
     void PUBLIC_API tuneAllKernels();
+
+    // ==============================================================================================================================================
+    // Output methods
 
     // Prints tuning results of kernel with given id to screen.
     void PUBLIC_API printToScreen(const size_t id) const;
@@ -148,17 +156,16 @@ private:
     size_t getConfiguratorIndex(const size_t kernelId) const;
 
     // Prints kernel info from result to given output stream.
-    void printKernelInfo(const cltune::PublicTunerResult& result, std::ostream& out) const;
+    void printKernelInfo(const PublicTunerResult& result, std::ostream& out) const;
 
     // Helper method for printing results to screen, file, etc.
     void printResults(const size_t id, std::ostream& out) const;
 
     // Stores tuning result for given kernel.
-    void storeTunerResult(const size_t id, const cltune::PublicTunerResult& result,
-                          const float extendedComputationDuration);
+    void storeTunerResult(const size_t id, const PublicTunerResult& result, const float extendedComputationDuration);
 
     const std::string extHeader = "[Extended Tuner] ";
-    const std::string extDuration = "Duration of customizedCompute() method: ";
+    const std::string extDuration = "Duration of customizedComputation() method: ";
     const std::string extKernelDuration = "Duration of kernel execution: ";
     const std::string extFastestKernelDuration = "Duration of the fastest kernel execution: ";
     const std::string extKernelParameters = "Parameters of the fastest kernel: ";
