@@ -130,7 +130,7 @@ link_directories(${FRAMEWORK_LIBRARY_DIRS})
 
 # Gathers all source-files
 set(TUNER
-    src/cltune.cc
+    src/internal_api.cc
     src/extended_tuner.cpp
     src/tuner_impl.cc
     src/kernel_info.cc
@@ -149,7 +149,7 @@ target_link_libraries(cltune ${FRAMEWORK_LIBRARIES})
 
 # Installs the library
 install(TARGETS cltune DESTINATION lib)
-install(FILES include/cltune.h DESTINATION include)
+install(FILES include/extended_tuner.h DESTINATION include)
 
 # ==================================================================================================
 

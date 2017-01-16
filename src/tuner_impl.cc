@@ -570,7 +570,7 @@ size_t TunerImpl::GetNumConfigurations(const size_t id) {
 // =================================================================================================
 
 // Returns next configuration for given kernel.
-KernelInfo::Configuration TunerImpl::GetNextConfiguration(const size_t id) {
+KernelInfo::Configuration TunerImpl::GetNextConfiguration(const size_t id) const {
   if(kernel_searchers_.at(id) == nullptr) {
     throw std::runtime_error("Next configuration might not exist, call GetNumConfigurations() method first.");
   }

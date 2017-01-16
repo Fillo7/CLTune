@@ -167,7 +167,7 @@ class Tuner {
 
   // Returns number of unique configurations for given kernel based on specified parameters and search method.
   // This method should be used only if using RunSingleKernel() method.
-  size_t PUBLIC_API GetNumConfigurations(const size_t id);
+  size_t PUBLIC_API GetNumConfigurations(const size_t id) const;
 
   // Returns next configuration for given kernel based on search method.
   // This method should be used only if using RunSingleKernel() method.

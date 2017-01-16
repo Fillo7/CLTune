@@ -111,7 +111,7 @@ class TunerImpl {
   size_t GetNumConfigurations(const size_t id);
 
   // Returns next configuration for given kernel.
-  KernelInfo::Configuration GetNextConfiguration(const size_t id);
+  KernelInfo::Configuration GetNextConfiguration(const size_t id) const;
 
   // Updates searcher with given info.
   void UpdateSearcher(const size_t id, const float previous_running_time);
