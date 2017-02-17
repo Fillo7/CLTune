@@ -18,7 +18,8 @@ public:
     // May compute additional data on CPU, which is later used during kernel execution.
     // May do additional operations on output provided by kernel execution.
     // Its running time is measured and added to kernel execution time.
-    virtual PublicTunerResult customizedComputation(const ParameterRange& configuration) = 0;
+    virtual PublicTunerResult customizedComputation(const ParameterRange& configuration, const IntRange& currentGlobal,
+        const IntRange& currentLocal) = 0;
 };
 
 } // namespace cltune
