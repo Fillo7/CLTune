@@ -53,5 +53,3 @@ __kernel void reduceReference(__global const float* in, __global float* out, uns
         atomic_add_global(out, buf[0]);
     }
 } 
-
-

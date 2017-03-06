@@ -48,8 +48,8 @@ int main(int argc, char** argv)
 
     // Declare constants
     const float UPPER_INTERVAL_BOUNDARY = 1000.0f; // used for generating random test data
-    const std::string multiRunKernelName = std::string("extended_simple_multirun.cl");
-    const std::string referenceKernelName = std::string("extended_simple_reference.cl");
+    const std::string multiRunKernelName("../samples/extended_simple/extended_simple_multirun.cl");
+    const std::string referenceKernelName("../samples/extended_simple/extended_simple_reference.cl");
 
     // Declare kernel parameters
     const int numberOfElements = 4096 * 4096;

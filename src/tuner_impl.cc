@@ -150,6 +150,7 @@ PublicTunerResult TunerImpl::RunSingleKernel(const size_t id, const ParameterRan
 
   PrintHeader("Running kernel " + kernel.name());
 
+  std::string source(kernel.source());
   if (parameter_values.size() > 0) {
     for (auto &parameter : parameter_values) {
       KernelInfo::Setting setting;
@@ -159,7 +160,7 @@ PublicTunerResult TunerImpl::RunSingleKernel(const size_t id, const ParameterRan
     }
 
     // Adds the parameters to the source-code string as defines
-    std::string source = GetConfiguredKernelSource(id, configuration);
+    source = GetConfiguredKernelSource(id, configuration);
 
     // Updates the local range with the parameter values
     kernel.ComputeRanges(configuration);
@@ -169,7 +170,7 @@ PublicTunerResult TunerImpl::RunSingleKernel(const size_t id, const ParameterRan
   }
 
   // Compiles and runs the kernel
-  auto tuning_result = RunKernel(kernel.source(), kernel, 0, 1);
+  auto tuning_result = RunKernel(source, kernel, 0, 1);
   tuning_result.status = VerifyOutput();
 
   if (parameter_values.size() > 0) {
