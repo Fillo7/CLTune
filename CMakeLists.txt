@@ -158,7 +158,9 @@ if (SAMPLES)
 
   # Adds sample programs
   add_executable(extended_simple samples/extended_simple/extended_simple.cpp)
+  add_executable(reduction samples/reduction/reduction.cpp)
   target_link_libraries(extended_simple cltune ${FRAMEWORK_LIBRARIES} ${OpenMP_LIBRARY})
+  target_link_libraries(reduction cltune ${FRAMEWORK_LIBRARIES} ${OpenMP_LIBRARY})
 
   # Note: these are not installed because they depend on their separate OpenCL kernel files
 endif()

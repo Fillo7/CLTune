@@ -150,7 +150,7 @@ private:
     size_t kernelCount;
     std::unique_ptr<Tuner> basicTuner;
     std::vector<std::pair<size_t, UniqueConfigurator>> configurators;
-    std::vector<std::pair<size_t, ExtendedTunerResult>> results; // To do: implement better way to store results (map?)
+    std::vector<std::pair<size_t, ExtendedTunerResult>> results;
 
     // Checks if configurator exists for given kernel. Returns its position inside vector if it does, returns -1 otherwise.
     size_t getConfiguratorIndex(const size_t kernelId) const;
