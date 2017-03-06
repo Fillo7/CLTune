@@ -246,6 +246,16 @@ void ExtendedTuner::modelPrediction(const Model modelType, const float validatio
     basicTuner->ModelPrediction(modelType, validationFraction, testTopXConfigurations);
 }
 
+void ExtendedTuner::modifyGlobalRange(const size_t id, const IntRange& newGlobal)
+{
+    basicTuner->ModifyGlobalRange(id, newGlobal);
+}
+
+void ExtendedTuner::modifyLocalRange(const size_t id, const IntRange& newLocal)
+{
+    basicTuner->ModifyLocalRange(id, newLocal);
+}
+
 // ==================================================================================================================================================
 // Tuning methods
 

@@ -30,7 +30,7 @@ cl_device_id getDeviceID(int platformIndex, int deviceIndex) {
         fprintf(stderr, "Error in clGetPlatformID.");
         return NULL;
     }
-    if (platformIndex >= platforms) {
+    if (static_cast<size_t>(platformIndex) >= platforms) {
         fprintf(stderr, "Error: requested platform does not exist.");
         return NULL;
     }
@@ -42,7 +42,7 @@ cl_device_id getDeviceID(int platformIndex, int deviceIndex) {
         fprintf(stderr, "Error in clGetDeviceIDs.");
         return NULL;
     }
-    if (deviceIndex >= devices) {
+    if (static_cast<size_t>(platformIndex) >= devices) {
         fprintf(stderr, "Error: requested device does not exist.");
         return NULL;
     }
@@ -75,10 +75,22 @@ public:
         this->tuner = &tuner;
     }
 
-    virtual cltune::PublicTunerResult customizedComputation(const cltune::ParameterRange& configuration)
+    virtual cltune::PublicTunerResult customizedComputation(const cltune::ParameterRange& configuration, const cltune::IntRange& currentGlobal,
+        const cltune::IntRange& currentLocal)
     {
-        //tuner->
-        return tuner->runSingleKernel(kernelId, configuration);
+        auto newGlobal = currentGlobal;
+        for (const auto& parameter : configuration)
+        {
+            if (parameter.first == "WG_NUM")
+            {
+                newGlobal.at(0) += parameter.second;
+            }
+        }
+
+        tuner->modifyGlobalRange(kernelId, newGlobal);
+        auto result = tuner->runSingleKernel(kernelId, configuration);
+        tuner->modifyGlobalRange(kernelId, currentGlobal);
+        return result;
     }
 
 private:
@@ -129,33 +141,35 @@ int main(int argc, char **argv)
     size_t cus = (size_t)getComputeUnitNum(deviceId);
     printf("Number of CUs: %i\n", (int)cus);
 
-    cltune::Tuner tuner(platformIndex, deviceIndex);
-    size_t kernelId = tuner.AddKernel(std::vector<std::string>{ TUNED_KERNEL_NAME }, "reduce", ndRangeDimensions, { 1 });
-    tuner.AddParameter(kernelId, "WORK_GROUP_SIZE_X", { /*1, 2, 4, 8, 16, 32,*/ 64, 128, 256, 512 });
-    tuner.AddParameter(kernelId, "UNBOUNDED_WG", {0, 1});
-    tuner.AddParameter(kernelId, "WG_NUM", {0, cus, cus*2, cus*4, cus*8, cus*16});
-    tuner.AddParameter(kernelId, "VECTOR_SIZE", {1, 2, 4, 8, 16});
-    tuner.AddParameter(kernelId, "USE_ATOMICS", {0, 1});
+    cltune::ExtendedTuner tuner(platformIndex, deviceIndex);
+    size_t kernelId = tuner.addKernel(std::vector<std::string>{ TUNED_KERNEL_NAME }, "reduce", ndRangeDimensions, { 1 });
+    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", { /*1, 2, 4, 8, 16, 32,*/ 64, 128, 256, 512 });
+    tuner.addParameter(kernelId, "UNBOUNDED_WG", {0, 1});
+    tuner.addParameter(kernelId, "WG_NUM", {0, cus, cus*2, cus*4, cus*8, cus*16});
+    tuner.addParameter(kernelId, "VECTOR_SIZE", {1, 2, 4, 8, 16});
+    tuner.addParameter(kernelId, "USE_ATOMICS", {0, 1});
     // set local size to WORK_GROUP_SIZE_X
-    tuner.MulLocalSize(kernelId, { "WORK_GROUP_SIZE_X" });
+    tuner.mulLocalSize(kernelId, { "WORK_GROUP_SIZE_X" });
     // set global size according to WG persistency
-    tuner.DivGlobalSize(kernelId, { "VECTOR_SIZE" }); // divide by vector size
-    tuner.DivGlobalSize(kernelId, { "WORK_GROUP_SIZE_X" }); // convert size to WG num
-    tuner.MulGlobalSize(kernelId, { "UNBOUNDED_WG" }); // sets to 0 for persisten WG, not modify otherwise
+    tuner.divGlobalSize(kernelId, { "VECTOR_SIZE" }); // divide by vector size
+    tuner.divGlobalSize(kernelId, { "WORK_GROUP_SIZE_X" }); // convert size to WG num
+    tuner.mulGlobalSize(kernelId, { "UNBOUNDED_WG" }); // sets to 0 for persisten WG, not modify otherwise
     //tuner.AddGlobalSize(kernelId, { "WG_NUM" }); // add number of persistent WGs (0 if persistency not used)
-    tuner.MulGlobalSize(kernelId, { "WORK_GROUP_SIZE_X" }); // return from WG num to global size
+    tuner.mulGlobalSize(kernelId, { "WORK_GROUP_SIZE_X" }); // return from WG num to global size
     auto persistConstraint = [] (std::vector<size_t> v) { return (v[0] && v[1] == 0) || (!v[0] && v[1] > 0); };
-    tuner.AddConstraint(kernelId, persistConstraint, { "UNBOUNDED_WG", "WG_NUM" });
+    tuner.addConstraint(kernelId, persistConstraint, { "UNBOUNDED_WG", "WG_NUM" });
 
-    tuner.SetReference(std::vector<std::string>{ REFERENCE_KERNEL_NAME }, "reduceReference", ndRangeDimensions, { 256 });
+    tuner.setReference(std::vector<std::string>{ REFERENCE_KERNEL_NAME }, "reduceReference", ndRangeDimensions, { 256 });
 
-    tuner.AddArgumentInput(kernelId, src);
-    tuner.AddArgumentOutput(kernelId, dst);
-    tuner.AddArgumentScalar(kernelId, size);
+    tuner.addArgumentInput(kernelId, src);
+    tuner.addArgumentOutput(kernelId, dst);
+    tuner.addArgumentScalar(kernelId, size);
 
-    tuner.TuneAllKernels();
-    tuner.PrintToScreen();
-    tuner.PrintToFile("result.csv");
+    tuner.setConfigurator(kernelId, cltune::UniqueConfigurator(new ReductionConfigurator(tuner, kernelId)));
+
+    tuner.tuneAllKernels();
+    tuner.printToScreen(kernelId);
+    tuner.printToFile(kernelId, "result.csv");
 
     return 0;
 }

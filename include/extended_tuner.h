@@ -113,6 +113,10 @@ public:
     // based on this model. This is only useful if a fraction of the search space is explored, as is the case when doing random-search.
     void PUBLIC_API modelPrediction(const Model modelType, const float validationFraction, const size_t testTopXConfigurations);
 
+    // Modifies global / local range size for given kernel
+    void PUBLIC_API modifyGlobalRange(const size_t id, const IntRange& newGlobal);
+    void PUBLIC_API modifyLocalRange(const size_t id, const IntRange& newLocal);
+
     // ==============================================================================================================================================
     // Tuning methods
 
