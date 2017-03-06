@@ -378,6 +378,30 @@ std::vector<PublicTunerResult> Tuner::TuneSingleKernel(const size_t id) {
 
 // =================================================================================================
 
+// Modifies global / local range size for given kernel
+void Tuner::ModifyGlobalRange(const size_t id, const IntRange &new_global) {
+  if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
+  pimpl->kernels_[id].set_global_base(new_global);
+}
+
+void Tuner::ModifyLocalRange(const size_t id, const IntRange &new_local) {
+  if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
+  pimpl->kernels_[id].set_local_base(new_local);
+}
+
+// Returns global / local range size for given kernel
+IntRange Tuner::GetGlobalRange(const size_t id) const {
+    if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
+    return pimpl->kernels_[id].global_base();
+}
+
+IntRange Tuner::GetLocalRange(const size_t id) const {
+    if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
+    return pimpl->kernels_[id].local_base();
+}
+
+// =================================================================================================
+
 // Returns number of unique configurations for given kernel based on specified parameters and search method.
 size_t Tuner::GetNumConfigurations(const size_t id) const {
   if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }

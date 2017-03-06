@@ -16,7 +16,8 @@ public:
         this->tuner = &tuner;
     }
 
-    virtual cltune::PublicTunerResult customizedComputation(const cltune::ParameterRange& configuration)
+    virtual cltune::PublicTunerResult customizedComputation(const cltune::ParameterRange& configuration, const cltune::IntRange& currentGlobal,
+        const cltune::IntRange& currentLocal)
     {
         // Additional computations may be executed here
 

@@ -39,13 +39,13 @@ public:
     // Adds a new kernel to the list of tuning-kernels and returns a unique ID (to be used when adding tuning parameters).
     // Either loads the source from filenames or from string.
     size_t PUBLIC_API addKernel(const std::vector<std::string>& filenames, const std::string& kernelName, const IntRange& global,
-                                const IntRange& local);
+        const IntRange& local);
     size_t PUBLIC_API addKernelFromString(const std::string& source, const std::string& kernelName, const IntRange& global, const IntRange& local);
 
     // Sets the reference kernel. Same as the AddKernel function, but in this case there is only one reference kernel.
     // Calling this function again will overwrite the previous reference kernel.
     void PUBLIC_API setReference(const std::vector<std::string>& filenames, const std::string& kernelName, const IntRange& global,
-                                 const IntRange& local);
+        const IntRange& local);
     void PUBLIC_API setReferenceFromString(const std::string& source, const std::string& kernelName, const IntRange& global, const IntRange& local);
 
     // ==============================================================================================================================================
@@ -98,7 +98,7 @@ public:
     void PUBLIC_API useRandomSearch(const size_t id, const double fraction);
     void PUBLIC_API useAnnealing(const size_t id, const double fraction, const double maxTemperature);
     void PUBLIC_API usePSO(const size_t id, const double fraction, const size_t swarmSize, const double influenceGlobal, const double influenceLocal,
-                           const double influenceRandom);
+        const double influenceRandom);
 
     // Sets the tuner configurator for specified kernel. There can be up to one configurator per kernel.
     void PUBLIC_API setConfigurator(const size_t id, UniqueConfigurator configurator);

@@ -28,7 +28,7 @@ ExtendedTuner::~ExtendedTuner() {}
 // Kernel addition methods
 
 size_t ExtendedTuner::addKernel(const std::vector<std::string>& filenames, const std::string& kernelName, const IntRange& global,
-                                const IntRange& local)
+    const IntRange& local)
 {
     size_t id = basicTuner->AddKernel(filenames, kernelName, global, local);
     setConfigurator(id, UniqueConfigurator(new DefaultConfigurator(*basicTuner, id)));
@@ -38,7 +38,7 @@ size_t ExtendedTuner::addKernel(const std::vector<std::string>& filenames, const
 }
 
 size_t ExtendedTuner::addKernelFromString(const std::string& source, const std::string& kernelName, const IntRange& global,
-                                          const IntRange& local)
+    const IntRange& local)
 {
     size_t id = basicTuner->AddKernelFromString(source, kernelName, global, local);
     setConfigurator(id, UniqueConfigurator(new DefaultConfigurator(*basicTuner, id)));
@@ -48,13 +48,13 @@ size_t ExtendedTuner::addKernelFromString(const std::string& source, const std::
 }
 
 void ExtendedTuner::setReference(const std::vector<std::string>& filenames, const std::string& kernelName, const IntRange& global,
-                                 const IntRange& local)
+    const IntRange& local)
 {
     basicTuner->SetReference(filenames, kernelName, global, local);
 }
 
 void ExtendedTuner::setReferenceFromString(const std::string& source, const std::string& kernelName, const IntRange& global,
-                                           const IntRange& local)
+    const IntRange& local)
 {
     basicTuner->SetReferenceFromString(source, kernelName, global, local);
 }
@@ -213,7 +213,7 @@ void ExtendedTuner::useAnnealing(const size_t id, const double fraction, const d
 }
 
 void ExtendedTuner::usePSO(const size_t id, const double fraction, const size_t swarmSize, const double influenceGlobal,
-                            const double influenceLocal, const double influenceRandom)
+    const double influenceLocal, const double influenceRandom)
 {
     basicTuner->UsePSO(id, fraction, swarmSize, influenceGlobal, influenceLocal, influenceRandom);
 }
@@ -267,7 +267,8 @@ void ExtendedTuner::tuneSingleKernel(const size_t id)
 
         auto begin = std::chrono::high_resolution_clock::now();
         // Run kernel with acquired configuration, this is timed part
-        PublicTunerResult result = configurators.at(configuratorIndex).second->customizedComputation(configuration);
+        PublicTunerResult result = configurators.at(configuratorIndex).second->customizedComputation(configuration, basicTuner->GetGlobalRange(id),
+            basicTuner->GetLocalRange(id));
         auto end = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
 

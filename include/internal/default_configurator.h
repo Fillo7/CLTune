@@ -16,7 +16,7 @@ public:
         this->tuner = &tuner;
     }
 
-    virtual PublicTunerResult customizedComputation(const ParameterRange& configuration)
+    virtual PublicTunerResult customizedComputation(const ParameterRange& configuration, const IntRange& currentGlobal, const IntRange& currentLocal)
     {
         return tuner->RunSingleKernel(kernelId, configuration);
     }

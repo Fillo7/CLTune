@@ -165,6 +165,14 @@ class Tuner {
   // Starts the tuning process, but this time only for specified kernel.
   std::vector<PublicTunerResult> PUBLIC_API TuneSingleKernel(const size_t id);
 
+  // Modifies global / local range size for given kernel
+  void PUBLIC_API ModifyGlobalRange(const size_t id, const IntRange &new_global);
+  void PUBLIC_API ModifyLocalRange(const size_t id, const IntRange &new_local);
+
+  // Returns global / local range size for given kernel
+  IntRange PUBLIC_API GetGlobalRange(const size_t id) const;
+  IntRange PUBLIC_API GetLocalRange(const size_t id) const;
+
   // Returns number of unique configurations for given kernel based on specified parameters and search method.
   // This method should be used only if using RunSingleKernel() method.
   size_t PUBLIC_API GetNumConfigurations(const size_t id) const;
