@@ -14,7 +14,7 @@
 const char* TUNED_KERNEL_NAME = "../samples/reduction/reduction.cl";
 const char* REFERENCE_KERNEL_NAME = "../samples/reduction/reduction_reference.cl";
 
-static int size       = 1024*1024*128;
+static int size       = 1024*1024*64;
 
 cl_device_id getDeviceID(int platformIndex, int deviceIndex)
 {
@@ -80,7 +80,7 @@ public:
         auto newGlobal = currentGlobal;
         for (const auto& parameter : configuration)
         {
-            if (parameter.first == "WG_NUM")
+            if (parameter.first == std::string("WG_NUM"))
             {
                 newGlobal.at(0) += parameter.second;
             }
@@ -147,14 +147,15 @@ int main(int argc, char **argv)
 
     tuner.setReference(std::vector<std::string>{ REFERENCE_KERNEL_NAME }, "reduceReference", ndRangeDimensions, { 256 });
 
-    tuner.addArgumentInputReference(src);
-    tuner.addArgumentOutputReference(dst);
-    tuner.addArgumentScalarReference(size);
-
     tuner.addArgumentInput(kernelId, src);
     tuner.addArgumentOutput(kernelId, dst);
     tuner.addArgumentScalar(kernelId, size);
 
+    tuner.addArgumentInputReference(src);
+    tuner.addArgumentOutputReference(dst);
+    tuner.addArgumentScalarReference(size);
+
+    tuner.chooseVerificationMethod(cltune::VerificationMethod::SideBySide, 0.01);
     tuner.setConfigurator(kernelId, cltune::UniqueConfigurator(new ReductionConfigurator(tuner, kernelId)));
 
     tuner.tuneAllKernels();
