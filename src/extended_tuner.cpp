@@ -4,7 +4,7 @@
 #include <fstream>
 
 #include "CL/cl.h"
-#include "internal\default_configurator.h"
+#include "internal/default_configurator.h"
 #include "extended_tuner.h"
 
 namespace cltune
