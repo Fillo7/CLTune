@@ -87,6 +87,7 @@ public:
         }
 
         tuner->modifyGlobalRange(kernelId, newGlobal);*/
+
         auto result = tuner->runSingleKernel(kernelId, configuration);
         //tuner->modifyGlobalRange(kernelId, currentGlobal);
         return result;
@@ -107,7 +108,7 @@ int main(int argc, char **argv)
     // fill vector with random values from <0,1>
     for (int i = 0; i < size; i++)
     {
-        src[i] = (float) rand() / (float) RAND_MAX;
+        src[i] = (float) rand() / (float) RAND_MAX + 1.0f;
         dst[i] = 0.0f;
     }
 
@@ -133,7 +134,7 @@ int main(int argc, char **argv)
     tuner.addParameter(kernelId, "UNBOUNDED_WG", { 0, 1 });
     tuner.addParameter(kernelId, "WG_NUM", { 0, cus, cus * 2, cus * 4, cus * 8, cus * 16 });
     tuner.addParameter(kernelId, "VECTOR_SIZE", { 1, 2, 4, 8, 16 });
-    tuner.addParameter(kernelId, "USE_ATOMICS", { 0, 1 });
+    tuner.addParameter(kernelId, "USE_ATOMICS", { /*0,*/ 1 });
     // set local size to WORK_GROUP_SIZE_X
     tuner.mulLocalSize(kernelId, { "WORK_GROUP_SIZE_X" });
     // set global size according to WG persistency
@@ -155,7 +156,7 @@ int main(int argc, char **argv)
     tuner.addArgumentOutputReference(dst);
     tuner.addArgumentScalarReference(size);
 
-    tuner.chooseVerificationMethod(cltune::VerificationMethod::SideBySide, 0.01);
+    tuner.chooseVerificationMethod(cltune::VerificationMethod::SideBySide, (float)size / 10000.0f);
     tuner.setConfigurator(kernelId, cltune::UniqueConfigurator(new ReductionConfigurator(tuner, kernelId)));
 
     tuner.tuneAllKernels();

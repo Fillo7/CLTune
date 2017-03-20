@@ -711,8 +711,8 @@ bool TunerImpl::DownloadAndCompare(KernelInfo::MemArgument &device_buffer, const
     for (auto j = size_t{ 0 }; j<device_buffer.size; ++j)
     {
       if (AbsoluteDifference(reference_output[j], host_buffer[j]) > tolerance_treshold_) {
-        fprintf(stderr, "%s Different results for position %u in output: difference is %.8lf\n",
-                kMessageWarning.c_str(), j, AbsoluteDifference(reference_output[j], host_buffer[j]));
+        fprintf(stderr, "%s Different results for position %u in output: difference is %.8lf (%f vs %f)\n",
+                kMessageWarning.c_str(), j, AbsoluteDifference(reference_output[j], host_buffer[j]), reference_output[j], host_buffer[j]);
         return false;
       }
     }
