@@ -82,6 +82,11 @@ void ExtendedTuner::divGlobalSize(const size_t id, const StringRange range)
     basicTuner->DivGlobalSize(id, range);
 }
 
+void ExtendedTuner::addGlobalSize(const size_t id, const StringRange range)
+{
+    basicTuner->AddGlobalSize(id, range);
+}
+
 void ExtendedTuner::mulLocalSize(const size_t id, const StringRange range)
 {
     basicTuner->MulLocalSize(id, range);

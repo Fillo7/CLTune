@@ -111,6 +111,7 @@ class Tuner {
   // modifier can be multiplication or division.
   void PUBLIC_API MulGlobalSize(const size_t id, const StringRange range);
   void PUBLIC_API DivGlobalSize(const size_t id, const StringRange range);
+  void PUBLIC_API AddGlobalSize(const size_t id, const StringRange range);
   void PUBLIC_API MulLocalSize(const size_t id, const StringRange range);
   void PUBLIC_API DivLocalSize(const size_t id, const StringRange range);
 

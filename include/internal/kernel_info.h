@@ -70,7 +70,7 @@ class KernelInfo {
  public:
 
   // Enumeration of modifiers to global/local thread-sizes
-  enum class ThreadSizeModifierType { kGlobalMul, kGlobalDiv, kLocalMul, kLocalDiv };
+  enum class ThreadSizeModifierType { kGlobalMul, kGlobalDiv, kGlobalAdd, kLocalMul, kLocalDiv };
 
   // Helper structure holding a parameter name and a list of all values
   struct Parameter {

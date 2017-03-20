@@ -77,7 +77,7 @@ public:
     virtual cltune::PublicTunerResult customizedComputation(const cltune::ParameterRange& configuration, const cltune::IntRange& currentGlobal,
         const cltune::IntRange& currentLocal)
     {
-        auto newGlobal = currentGlobal;
+        /*auto newGlobal = currentGlobal;
         for (const auto& parameter : configuration)
         {
             if (parameter.first == std::string("WG_NUM"))
@@ -86,9 +86,9 @@ public:
             }
         }
 
-        tuner->modifyGlobalRange(kernelId, newGlobal);
+        tuner->modifyGlobalRange(kernelId, newGlobal);*/
         auto result = tuner->runSingleKernel(kernelId, configuration);
-        tuner->modifyGlobalRange(kernelId, currentGlobal);
+        //tuner->modifyGlobalRange(kernelId, currentGlobal);
         return result;
     }
 
@@ -140,7 +140,7 @@ int main(int argc, char **argv)
     tuner.divGlobalSize(kernelId, { "VECTOR_SIZE" }); // divide by vector size
     tuner.divGlobalSize(kernelId, { "WORK_GROUP_SIZE_X" }); // convert size to WG num
     tuner.mulGlobalSize(kernelId, { "UNBOUNDED_WG" }); // sets to 0 for persisten WG, not modify otherwise
-    //tuner.AddGlobalSize(kernelId, { "WG_NUM" }); // add number of persistent WGs (0 if persistency not used)
+    tuner.addGlobalSize(kernelId, { "WG_NUM" }); // add number of persistent WGs (0 if persistency not used)
     tuner.mulGlobalSize(kernelId, { "WORK_GROUP_SIZE_X" }); // return from WG num to global size
     auto persistConstraint = [](std::vector<size_t> v) { return (v[0] && v[1] == 0) || (!v[0] && v[1] > 0); };
     tuner.addConstraint(kernelId, persistConstraint, { "UNBOUNDED_WG", "WG_NUM" });

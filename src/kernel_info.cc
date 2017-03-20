@@ -139,6 +139,7 @@ void KernelInfo::ComputeRanges(const Configuration &config) {
           switch (modifier.type) {
             case ThreadSizeModifierType::kGlobalMul: global_values[dim] *= setting.value; break;
             case ThreadSizeModifierType::kGlobalDiv: global_values[dim] /= setting.value; break;
+            case ThreadSizeModifierType::kGlobalAdd: global_values[dim] += setting.value; break;
             case ThreadSizeModifierType::kLocalMul: local_values[dim] *= setting.value; break;
             case ThreadSizeModifierType::kLocalDiv: local_values[dim] /= setting.value; break;
             default: assert(0 && "Invalid modifier type");

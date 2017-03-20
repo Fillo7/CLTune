@@ -60,6 +60,7 @@ public:
     // Modifies the global or local thread-size (integers) by one of the parameters (strings). The modifier can be multiplication or division.
     void PUBLIC_API mulGlobalSize(const size_t id, const StringRange range);
     void PUBLIC_API divGlobalSize(const size_t id, const StringRange range);
+    void PUBLIC_API addGlobalSize(const size_t id, const StringRange range);
     void PUBLIC_API mulLocalSize(const size_t id, const StringRange range);
     void PUBLIC_API divLocalSize(const size_t id, const StringRange range);
 

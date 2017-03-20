@@ -122,6 +122,10 @@ void Tuner::DivGlobalSize(const size_t id, const StringRange range) {
   if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
   pimpl->kernels_[id].AddModifier(range, KernelInfo::ThreadSizeModifierType::kGlobalDiv);
 }
+void Tuner::AddGlobalSize(const size_t id, const StringRange range) {
+  if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
+  pimpl->kernels_[id].AddModifier(range, KernelInfo::ThreadSizeModifierType::kGlobalAdd);
+}
 void Tuner::MulLocalSize(const size_t id, const StringRange range) {
   if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
   pimpl->kernels_[id].AddModifier(range, KernelInfo::ThreadSizeModifierType::kLocalMul);
