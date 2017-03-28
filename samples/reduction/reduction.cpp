@@ -14,7 +14,7 @@
 const char* TUNED_KERNEL_NAME = "../samples/reduction/reduction.cl";
 const char* REFERENCE_KERNEL_NAME = "../samples/reduction/reduction_reference.cl";
 
-static int size       = 1024*1024*64;
+static int size       = 1024*1024;
 
 cl_device_id getDeviceID(int platformIndex, int deviceIndex)
 {
@@ -77,19 +77,47 @@ public:
     virtual cltune::PublicTunerResult customizedComputation(const cltune::ParameterRange& configuration, const cltune::IntRange& currentGlobal,
         const cltune::IntRange& currentLocal)
     {
-        /*auto newGlobal = currentGlobal;
+        printf("\nXXX customizedComputation BEGIN\n");
+
+        cltune::PublicTunerResult result;
+
+        bool atomics = false;
         for (const auto& parameter : configuration)
-        {
-            if (parameter.first == std::string("WG_NUM"))
-            {
-                newGlobal.at(0) += parameter.second;
-            }
+            if (parameter.first == std::string("USE_ATOMICS"))
+                atomics = (parameter.second == 1);
+
+        if (atomics) {
+            // only one kernel execution
+            result = tuner->runSingleKernel(kernelId, configuration);
         }
+        else {
+            int mySize = size; //XXX size is static const
+            int wgX = 0, vec = 0;
+            for (const auto& parameter : configuration) {
+                if (parameter.first == std::string("WORK_GROUP_SIZE_X"))
+                    wgX = parameter.second;
+                if (parameter.first == std::string("VECTOR_SIZE"))
+                    vec = parameter.second;
+            }
+            int shrink = wgX*vec;
+            unsigned long int globSize = (mySize+shrink-1)/shrink * wgX;
+            //reset initial parameters TODO this should be done by the tunner
+            tuner->modifyArgumentScalar(kernelId, mySize, 0);
+            tuner->modifyGlobalRange(kernelId, { globSize });
+            do {
+                // execute kernel TODO solve time additions here
+                result = tuner->runSingleKernel(kernelId, configuration);
+                mySize = (mySize+shrink-1)/shrink;
+                globSize = (mySize+shrink-1)/shrink * wgX;
+                printf("XXX next kernel run at size %i, global range %i\n", mySize, globSize);
+                // update size of vector to mySize
+                tuner->modifyArgumentScalar(kernelId, mySize, 0);
+                tuner->modifyGlobalRange(kernelId, { globSize });
+            } while (mySize > 1);
+        }
+        
+        printf("XXX customizedComputation END\n");
 
-        tuner->modifyGlobalRange(kernelId, newGlobal);*/
-
-        auto result = tuner->runSingleKernel(kernelId, configuration);
-        //tuner->modifyGlobalRange(kernelId, currentGlobal);
         return result;
     }
 
@@ -108,7 +136,7 @@ int main(int argc, char **argv)
     // fill vector with random values from <0,1>
     for (int i = 0; i < size; i++)
     {
-        src[i] = (float) rand() / (float) RAND_MAX + 1.0f;
+        src[i] = 1.0f;//(float) rand() / (float) RAND_MAX + 1.0f;
         dst[i] = 0.0f;
     }
 
@@ -126,15 +154,16 @@ int main(int argc, char **argv)
     cl_device_id deviceId = getDeviceID(platformIndex, deviceIndex);    
     printDeviceInfo(deviceId);
     size_t cus = (size_t)getComputeUnitNum(deviceId);
+cus = 8;
     printf("Number of CUs: %i\n", (int)cus);
 
     cltune::ExtendedTuner tuner(platformIndex, deviceIndex);
     size_t kernelId = tuner.addKernel(std::vector<std::string>{ TUNED_KERNEL_NAME }, "reduce", ndRangeDimensions, { 1 });
     tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", { /*1, 2, 4, 8, 16, 32,*/ 64, 128, 256, 512 });
-    tuner.addParameter(kernelId, "UNBOUNDED_WG", { 0, 1 });
+    tuner.addParameter(kernelId, "UNBOUNDED_WG", { /*0, */1 });
     tuner.addParameter(kernelId, "WG_NUM", { 0, cus, cus * 2, cus * 4, cus * 8, cus * 16 });
     tuner.addParameter(kernelId, "VECTOR_SIZE", { 1, 2, 4, 8, 16 });
-    tuner.addParameter(kernelId, "USE_ATOMICS", { /*0,*/ 1 });
+    tuner.addParameter(kernelId, "USE_ATOMICS", { 0/*, 1*/ });
     // set local size to WORK_GROUP_SIZE_X
     tuner.mulLocalSize(kernelId, { "WORK_GROUP_SIZE_X" });
     // set global size according to WG persistency
@@ -145,6 +174,8 @@ int main(int argc, char **argv)
     tuner.mulGlobalSize(kernelId, { "WORK_GROUP_SIZE_X" }); // return from WG num to global size
     auto persistConstraint = [](std::vector<size_t> v) { return (v[0] && v[1] == 0) || (!v[0] && v[1] > 0); };
     tuner.addConstraint(kernelId, persistConstraint, { "UNBOUNDED_WG", "WG_NUM" });
+    auto persistentAtomic = [](std::vector<size_t> v) { return (v[0] == 1) || (v[0] == 0 && v[1] == 1); };
+    tuner.addConstraint(kernelId, persistentAtomic, { "UNBOUNDED_WG", "USE_ATOMICS" } );
 
     tuner.setReference(std::vector<std::string>{ REFERENCE_KERNEL_NAME }, "reduceReference", ndRangeDimensions, { 256 });
 

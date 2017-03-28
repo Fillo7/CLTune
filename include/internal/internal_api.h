@@ -137,6 +137,7 @@ class Tuner {
   template <typename T> void AddArgumentInput(const size_t id, const std::vector<T> &source);
   template <typename T> void AddArgumentOutput(const size_t id, const std::vector<T> &source);
   template <typename T> void AddArgumentScalar(const size_t id, const T argument);
+  template <typename T> void ModifyArgumentScalar(const size_t id, const T argument, const int index);
 
   // Same as above, but for reference kernel.
   template <typename T> void AddArgumentInputReference(const std::vector<T> &source);

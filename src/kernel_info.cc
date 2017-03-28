@@ -340,5 +340,10 @@ void KernelInfo::AddArgumentScalar(const double2 argument) {
   arguments_double2_.push_back({ argument_counter_++, argument });
 }
 
+//TODO need more robust implementation in production code
+void KernelInfo::ModifyArgumentScalar(const int argument, const int index) {
+  arguments_int_.at(index).second = argument;
+}
+
 // =================================================================================================
 } // namespace cltune

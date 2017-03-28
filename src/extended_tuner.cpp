@@ -157,6 +157,13 @@ template void PUBLIC_API ExtendedTuner::addArgumentScalar<double>(const size_t i
 template void PUBLIC_API ExtendedTuner::addArgumentScalar<float2>(const size_t id, const float2 argument);
 template void PUBLIC_API ExtendedTuner::addArgumentScalar<double2>(const size_t id, const double2 argument);
 
+template <typename T> void ExtendedTuner::modifyArgumentScalar(const size_t id, const T argument, const int index)
+{
+    basicTuner->ModifyArgumentScalar(id, argument, index);
+}
+
+template void PUBLIC_API ExtendedTuner::modifyArgumentScalar<int>(const size_t id, const int argument, const int index);
+
 template <typename T> void ExtendedTuner::addArgumentInputReference(const std::vector<T>& source)
 {
     basicTuner->AddArgumentInputReference(source);

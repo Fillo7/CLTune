@@ -84,6 +84,7 @@ public:
     template <typename T> void addArgumentInput(const size_t id, const std::vector<T>& source);
     template <typename T> void addArgumentOutput(const size_t id, const std::vector<T>& source);
     template <typename T> void addArgumentScalar(const size_t id, const T argument);
+    template <typename T> void modifyArgumentScalar(const size_t id, const T argument, int index);
 
     // Same as above, but for reference kernel.
     template <typename T> void addArgumentInputReference(const std::vector<T>& source);

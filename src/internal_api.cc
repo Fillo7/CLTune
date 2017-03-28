@@ -296,6 +296,10 @@ template <> void PUBLIC_API Tuner::AddArgumentScalar<double2>(const size_t id, c
   if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
   pimpl->kernels_[id].AddArgumentScalar(argument);
 }
+template <> void PUBLIC_API Tuner::ModifyArgumentScalar<int>(const size_t id, const int argument, const int index) {
+  if (id >= pimpl->kernels_.size()) { throw std::runtime_error("Invalid kernel ID"); }
+  pimpl->kernels_[id].ModifyArgumentScalar(argument, index);
+}
 
 // Same as above for reference kernel
 template <> void PUBLIC_API Tuner::AddArgumentScalarReference<short>(const short argument) {

@@ -217,6 +217,7 @@ class KernelInfo {
   void AddArgumentScalar(const double argument);
   void AddArgumentScalar(const float2 argument);
   void AddArgumentScalar(const double2 argument);
+  void ModifyArgumentScalar(const int argument, const int index);
   
  private:
   // Called recursively internally by SetConfigurations 
